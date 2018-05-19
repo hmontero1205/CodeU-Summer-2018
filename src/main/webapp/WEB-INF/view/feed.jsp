@@ -20,28 +20,9 @@
 <%@ page import="codeu.model.data.Conversation" %>
 <%@ page import="codeu.model.data.User" %>
 <%@ page import="codeu.model.store.basic.UserStore" %>
+<%@ page import="java.util.Date" %>
 
-<%
-  List<FeedEntry> entries = (List<FeedEntry>) request.getAttribute("entries");
-
-  for(FeedEntry f : entries) {
-    System.out.printf("Creation Time: %s, ", f.getCreationTime());
-    if(f instanceof Message) {
-      System.out.printf("Type: Message, User: %s, Content: %s\n", UserStore.getInstance().getUser(((Message) f).getAuthorId()).getName(), ((Message) f).getContent());
-      continue;
-    }
-    if(f instanceof Conversation) {
-      System.out.printf("Type: Conversation, Title: %s\n",((Conversation) f).getTitle());
-      continue;
-    }
-    if(f instanceof User) {
-      System.out.printf("Type: User, Username: %s\n",((User) f).getName());
-      continue;
-    }
-  }
-
-
-%>
+<%List<FeedEntry> entries = (List<FeedEntry>) request.getAttribute("entries");%>
 
 
 <!DOCTYPE html>
@@ -67,6 +48,30 @@
 
 <div id="container">
   <h1>Activity Feed</h1>
+  <div class="feedcontainer">
+
+    <ul class="mdl-list">
+      <%
+        for(FeedEntry f : entries) {
+          String content = String.format("%s, ", Date.from(f.getCreationTime()));
+          if(f instanceof Message) {
+            content += String.format("Type: Message, User: %s, Content: %s\n", UserStore.getInstance().getUser(((Message) f).getAuthorId()).getName(), ((Message) f).getContent());
+          }
+          if(f instanceof Conversation) {
+            content += String.format("Type: Conversation, Title: %s, Owner: %s\n",((Conversation) f).getTitle(), UserStore.getInstance().getUser(((Conversation) f).getOwnerId()).getName());
+          }
+          if(f instanceof User) {
+            content += String.format("Type: User, Username: %s\n",((User) f).getName());
+          }
+      %>
+
+      <li> <%= content %></li>
+
+      <%
+        }
+      %>
+    </ul>
+  </div>
 </div>
 </body>
 </html>
