@@ -28,7 +28,7 @@
 
     <% if(request.getSession().getAttribute("user") != null){ %>
       <h1>Search for a Friend!</h1>
-      <form action="/conversations" method="POST">
+      <form action="/profile" method="POST">
           <div class="form-group">
             <label class="form-control-label">Name:</label>
           <input type="text" name="searchedUser">
