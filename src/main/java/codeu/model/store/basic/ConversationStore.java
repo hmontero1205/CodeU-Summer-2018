@@ -16,6 +16,7 @@ package codeu.model.store.basic;
 
 import codeu.model.data.Conversation;
 import codeu.model.store.persistence.PersistentStorageAgent;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -102,7 +103,7 @@ public class ConversationStore {
    *
    * @return null if the UUID does not match any existing Conversation.
    */
-  public Conversation getConversation(UUID id) {
+  public Conversation getConversationWithUUID(UUID id) {
     for (Conversation convo : conversations) {
       if (convo.getId().equals(id)) {
         return convo;
