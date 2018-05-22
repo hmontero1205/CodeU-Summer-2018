@@ -21,7 +21,7 @@ import java.util.UUID;
  * Class representing a conversation, which can be thought of as a chat room. Conversations are
  * created by a User and contain Messages.
  */
-public class Conversation {
+public class Conversation implements FeedEntry{
   public final UUID id;
   public final UUID owner;
   public final Instant creation;
