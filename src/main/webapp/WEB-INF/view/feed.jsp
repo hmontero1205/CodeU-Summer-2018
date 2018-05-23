@@ -52,20 +52,29 @@
 
     <ul class="mdl-list">
       <%
-        for(FeedEntry f : entries) {
+        UserStore userStore = UserStore.getInstance();
+        for (FeedEntry f : entries) {
           String content = String.format("%s, ", Date.from(f.getCreationTime()));
-          if(f instanceof Message) {
-            content += String.format("Type: Message, User: %s, Content: %s\n", UserStore.getInstance().getUser(((Message) f).getAuthorId()).getName(), ((Message) f).getContent());
+          if (f instanceof Message) {
+            Message m = (Message) f;
+            content += String.format("Type: Message, User: %s, Content: %s\n",
+                    userStore.getUser(m.getAuthorId()).getName(), m.getContent());
           }
-          if(f instanceof Conversation) {
-            content += String.format("Type: Conversation, Title: %s, Owner: %s\n",((Conversation) f).getTitle(), UserStore.getInstance().getUser(((Conversation) f).getOwnerId()).getName());
+
+          if (f instanceof Conversation) {
+            Conversation c = (Conversation) f;
+            content += String.format("Type: Conversation, Title: %s, Owner: %s\n", c.getTitle(),
+                    userStore.getUser(c.getOwnerId()).getName());
           }
-          if(f instanceof User) {
-            content += String.format("Type: User, Username: %s\n",((User) f).getName());
+
+          if (f instanceof User) {
+            User u = (User) f;
+            content += String.format("Type: User, Username: %s\n", u.getName());
           }
       %>
 
-      <li> <%= content %></li>
+      <li><%= content %>
+      </li>
 
       <%
         }

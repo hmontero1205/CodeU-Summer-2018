@@ -15,14 +15,17 @@
 package codeu.controller;
 
 import codeu.model.data.Conversation;
+import codeu.model.data.FeedEntry;
 import codeu.model.data.Message;
 import codeu.model.data.User;
 import codeu.model.store.basic.ConversationStore;
 import codeu.model.store.basic.MessageStore;
 import codeu.model.store.basic.UserStore;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import javax.servlet.RequestDispatcher;
@@ -72,8 +75,31 @@ public class FeedServletTest {
 
   @Test
   public void testDoGet() throws IOException, ServletException {
+    ArrayList<User> fakeUserList = new ArrayList<>();
+    fakeUserList.add(new User(UUID.randomUUID(), "fakenname", "fakepass", Instant.now()));
+
+    ArrayList<Conversation> fakeConversationList = new ArrayList<>();
+    fakeConversationList.add(
+        new Conversation(UUID.randomUUID(), fakeUserList.get(0).getId(),"test_conversation", Instant.now()));
+
+    ArrayList<Message> fakeMessageList = new ArrayList<>();
+    fakeMessageList.add(
+        new Message(UUID.randomUUID(), fakeConversationList.get(0).getId(), fakeUserList.get(0).getId(),
+            "fake content", Instant.now()));
+
+    List<FeedEntry> fakeEntryList = new ArrayList<FeedEntry>();
+    fakeEntryList.addAll(fakeConversationList);
+    fakeEntryList.addAll(fakeUserList);
+    fakeEntryList.addAll(fakeMessageList);
+    Collections.sort(fakeEntryList, new FeedServlet.FeedEntryComparator());
+
+    Mockito.when(mockUserStore.getAllUsers()).thenReturn(fakeUserList);
+    Mockito.when(mockConversationStore.getAllConversations()).thenReturn(fakeConversationList);
+    Mockito.when(mockMessageStore.getAllMessages()).thenReturn(fakeMessageList);
+
     feedServlet.doGet(mockRequest, mockResponse);
 
+    Mockito.verify(mockRequest).setAttribute("entries", fakeEntryList);
     Mockito.verify(mockRequestDispatcher).forward(mockRequest, mockResponse);
   }
 }

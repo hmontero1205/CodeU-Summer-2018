@@ -121,10 +121,12 @@ public class FeedServlet extends HttpServlet {
   }
 
   /**
-   * Comparator class that allows for comparision between FeedEntry objects. FeedEntries are compared by their creation time.
+   * Comparator class that allows for comparision between FeedEntry objects. FeedEntries are compared
+   * by their creation time.
    * This allows for chronological sorting of events that happen on the site.
    */
-  private class FeedEntryComparator implements Comparator<FeedEntry> {
+  public static class FeedEntryComparator implements Comparator<FeedEntry> {
+    @Override
     public int compare(FeedEntry e1, FeedEntry e2) {
       return e1.getCreationTime().compareTo(e2.getCreationTime());
     }
