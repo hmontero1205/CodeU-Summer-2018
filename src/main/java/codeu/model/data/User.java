@@ -18,11 +18,12 @@ import java.time.Instant;
 import java.util.UUID;
 
 /** Class representing a registered user. */
-public class User {
+public class User implements FeedEntry{
   private final UUID id;
   private final String name;
   private final String passwordHash;
   private final Instant creation;
+  private String bio;;
 
   /**
    * Constructs a new User.
@@ -31,12 +32,22 @@ public class User {
    * @param name the username of this User
    * @param passwordHash the password hash of this User
    * @param creation the creation time of this User
+   * @param bio the bio of this User
    */
+  public User(UUID id, String name, String passwordHash, Instant creation, String bio) {
+    this.id = id;
+    this.name = name;
+    this.passwordHash = passwordHash;
+    this.creation = creation;
+    this.bio = bio;
+  }
+
   public User(UUID id, String name, String passwordHash, Instant creation) {
     this.id = id;
     this.name = name;
     this.passwordHash = passwordHash;
     this.creation = creation;
+    this.bio = name + "has not updated their bio.";
   }
 
   /** Returns the ID of this User. */
@@ -48,7 +59,7 @@ public class User {
   public String getName() {
     return name;
   }
-  
+
   /** Returns the password hash of this User. */
   public String getPasswordHash() {
     return passwordHash;
@@ -57,5 +68,15 @@ public class User {
   /** Returns the creation time of this User. */
   public Instant getCreationTime() {
     return creation;
+  }
+
+  /** Sets a new bio for this User. */
+  public void setBio(String newbio) {
+    bio = newbio;
+  }
+
+  /** Returns the bio of this User. */
+  public String getBio() {
+    return bio;
   }
 }

@@ -1,5 +1,8 @@
 <%@ page import="java.util.List" %>
 <%@ page import="codeu.model.data.User" %>
+<%
+User requestUser = (User) request.getAttribute("requestUser");
+%>
 
 <!DOCTYPE html>
 <html>
@@ -21,26 +24,29 @@
   </nav>
 
   <div id="container">
+    <h1><%= requestUser.getName() %>'s Profile Page</h1>
 
+    <h2>About <%= requestUser.getName() %></h2>
+
+    <p><%= requestUser.getBio() %></p>
     <% if(request.getAttribute("error") != null){ %>
         <h2 style="color:red"><%= request.getAttribute("error") %></h2>
     <% } %>
 
-    <% if(request.getSession().getAttribute("user") != null){ %>
-      <h1>Search for a Friend!</h1>
-      <form action="/profile" method="POST">
+    <% if(String.valueOf(request.getSession().getAttribute("user"))
+         .equals(requestUser.getName())){ %>
+      <p>Edit Your Profile!</p>
+      <form action="/user/<%= request.getSession().getAttribute("user") %>" method="POST">
           <div class="form-group">
-            <label class="form-control-label">Name:</label>
-          <input type="text" name="searchedUser">
+            <label class="form-control-label">New Bio:</label>
+          <input  type="text" name="inputBio">
         </div>
 
-        <button type="submit">Search</button>
+        <button type="submit">Update</button>
       </form>
 
       <hr/>
     <% } %>
-
-    <h1>This is your profile</h1>
 
     <hr/>
   </div>

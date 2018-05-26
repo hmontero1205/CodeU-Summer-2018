@@ -18,6 +18,7 @@ import codeu.model.data.Conversation;
 import codeu.model.store.persistence.PersistentStorageAgent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Store class that uses in-memory data structures to hold values and automatically loads from and
@@ -91,6 +92,20 @@ public class ConversationStore {
     for (Conversation conversation : conversations) {
       if (conversation.getTitle().equals(title)) {
         return conversation;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Access the Conversation object with the given UUID.
+   *
+   * @return null if the UUID does not match any existing Conversation.
+   */
+  public Conversation getConversationWithUUID(UUID id) {
+    for (Conversation convo : conversations) {
+      if (convo.getId().equals(id)) {
+        return convo;
       }
     }
     return null;
