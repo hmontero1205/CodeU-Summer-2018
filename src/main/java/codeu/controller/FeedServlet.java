@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Servlet class responsible for the conversations page.
+ * Servlet class responsible for the activity feed page.
  */
 public class FeedServlet extends HttpServlet {
 
@@ -50,6 +50,10 @@ public class FeedServlet extends HttpServlet {
    */
   private MessageStore messageStore;
 
+  /**
+   * Default number of entries on the feed page
+   */
+  public static final int DEFAULT_ENTRY_COUNT = 20;
   /**
    * Set up state for handling conversation-related requests. This method is only called when
    * running in a server, not when running in a test.
@@ -81,7 +85,6 @@ public class FeedServlet extends HttpServlet {
   /**
    * This function fires when a user navigates to the conversations page. It gets all of the
    * conversations from the model and forwards to conversations.jsp for rendering the list.
-   * TODO Implement threshold for fetching entries.
    */
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -97,19 +100,41 @@ public class FeedServlet extends HttpServlet {
     entries.addAll(messages);
 
     Collections.sort(entries, new FeedEntryComparator());
+    int feedCount = Math.min(DEFAULT_ENTRY_COUNT, entries.size());
+    int remaining = entries.size() - feedCount;
 
-    request.setAttribute("entries", entries);
+    request.setAttribute("entries", entries.subList(entries.size() - feedCount, entries.size()));
+    request.setAttribute("feedCount", feedCount);
+    request.setAttribute("remaining", remaining);
+    request.setAttribute("scrollUp", false);
     request.getRequestDispatcher("/WEB-INF/view/feed.jsp").forward(request, response);
   }
 
   /**
    * This function fires when a user submits the form on the activity feed page.
-   * TODO Implement user-defined threshold
    */
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response)
-      throws IOException, ServletException, UnsupportedOperationException {
-    throw new UnsupportedOperationException();
+      throws IOException, ServletException {
+    List<Conversation> conversations = conversationStore.getAllConversations();
+    List<User> users = userStore.getAllUsers();
+    List<Message> messages = messageStore.getAllMessages();
+
+    List<FeedEntry> entries = new ArrayList<FeedEntry>();
+
+    entries.addAll(conversations);
+    entries.addAll(users);
+    entries.addAll(messages);
+
+    Collections.sort(entries, new FeedEntryComparator());
+    int newFeedCount = Math.min(Integer.parseInt(request.getParameter("feedCount")) + 10, entries.size());
+    int remaining = entries.size() - newFeedCount;
+
+    request.setAttribute("entries", entries.subList(entries.size() - newFeedCount, entries.size()));
+    request.setAttribute("feedCount", newFeedCount);
+    request.setAttribute("remaining", remaining);
+    request.setAttribute("scrollUp", true);
+    request.getRequestDispatcher("/WEB-INF/view/feed.jsp").forward(request, response);
   }
 
   /**

@@ -36,8 +36,14 @@
   <script>
       // scroll the chat div to the bottom
       function scrollFeed() {
-          var feedContainer = document.getElementById('fc');
-          feedContainer.scrollTop = feedContainer.scrollHeight;
+          <%
+            if(!(Boolean) request.getAttribute("scrollUp")) {
+          %>
+              var feedContainer = document.getElementById('fc');
+              feedContainer.scrollTop = feedContainer.scrollHeight;
+          <%
+            }
+          %>
       };
   </script>
 </head>
@@ -65,6 +71,17 @@
 
     <ul>
       <%
+        int remainingEntries = (Integer) request.getAttribute("remaining");
+        if(remainingEntries > 0) {
+      %>
+      <li>
+        <form action="/feed" method="POST">
+          <input type="hidden" name="feedCount" value=<%= request.getAttribute("feedCount")%>>
+          <button type="submit">Show more(<%= remainingEntries %>)</button>
+        </form>
+      </li>
+      <%
+        }
         UserStore userStore = UserStore.getInstance();
         ConversationStore conversationStore = ConversationStore.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("[EEEE MMMM dd yyyy @ hh:mma]");
