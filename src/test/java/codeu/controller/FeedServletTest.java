@@ -149,6 +149,5 @@ public class FeedServletTest {
     Mockito.verify(mockRequest).setAttribute("feedCount", newFeedCount);
     Mockito.verify(mockRequest).setAttribute("scrollUp", true);
     Mockito.verify(mockRequestDispatcher).forward(mockRequest, mockResponse);
-
   }
 }
