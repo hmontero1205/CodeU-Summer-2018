@@ -14,6 +14,7 @@
 
 package codeu.controller;
 
+import static codeu.controller.FeedServlet.DEFAULT_ENTRY_COUNT;
 import codeu.model.data.Conversation;
 import codeu.model.data.FeedEntry;
 import codeu.model.data.Message;
@@ -37,9 +38,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-
-import static codeu.controller.FeedServlet.DEFAULT_ENTRY_COUNT;
 
 public class FeedServletTest {
 
@@ -73,10 +73,7 @@ public class FeedServletTest {
 
     mockUserStore = Mockito.mock(UserStore.class);
     feedServlet.setUserStore(mockUserStore);
-  }
 
-  @Test
-  public void testDoGet() throws IOException, ServletException {
     ArrayList<User> fakeUserList = new ArrayList<>();
     fakeUserList.add(new User(UUID.randomUUID(), "fakenname", "fakepass", Instant.now()));
 
@@ -95,13 +92,15 @@ public class FeedServletTest {
     fakeEntryList.addAll(fakeMessageList);
 
     Collections.sort(fakeEntryList, new FeedServlet.FeedEntryComparator());
+    Mockito.when(feedServlet.getSortedEntries()).thenReturn(fakeEntryList);
+  }
+
+  @Test
+  public void testDoGet() throws IOException, ServletException {
+    List<FeedEntry> fakeEntryList = feedServlet.getSortedEntries();
     int feedCount = Math.min(DEFAULT_ENTRY_COUNT, fakeEntryList.size());
     int remaining = fakeEntryList.size() - feedCount;
     List<FeedEntry> fakeSublist = fakeEntryList.subList(fakeEntryList.size() - feedCount, fakeEntryList.size());
-
-    Mockito.when(mockUserStore.getAllUsers()).thenReturn(fakeUserList);
-    Mockito.when(mockConversationStore.getAllConversations()).thenReturn(fakeConversationList);
-    Mockito.when(mockMessageStore.getAllMessages()).thenReturn(fakeMessageList);
 
     feedServlet.doGet(mockRequest, mockResponse);
 
@@ -116,31 +115,11 @@ public class FeedServletTest {
   public void testDoPost() throws IOException, ServletException {
     Mockito.when(mockRequest.getParameter("feedCount")).thenReturn("1");
     Mockito.when(mockSession.getAttribute("user")).thenReturn("test_username");
-    ArrayList<User> fakeUserList = new ArrayList<>();
-    fakeUserList.add(new User(UUID.randomUUID(), "fakenname", "fakepass", Instant.now()));
 
-    ArrayList<Conversation> fakeConversationList = new ArrayList<>();
-    fakeConversationList.add(
-        new Conversation(UUID.randomUUID(), fakeUserList.get(0).getId(),"test_conversation", Instant.now()));
-
-    ArrayList<Message> fakeMessageList = new ArrayList<>();
-    fakeMessageList.add(
-        new Message(UUID.randomUUID(), fakeConversationList.get(0).getId(), fakeUserList.get(0).getId(),
-            "fake content", Instant.now()));
-
-    List<FeedEntry> fakeEntryList = new ArrayList<FeedEntry>();
-    fakeEntryList.addAll(fakeConversationList);
-    fakeEntryList.addAll(fakeUserList);
-    fakeEntryList.addAll(fakeMessageList);
-
-    Collections.sort(fakeEntryList, new FeedServlet.FeedEntryComparator());
+    List<FeedEntry> fakeEntryList = feedServlet.getSortedEntries();
     int newFeedCount = Math.min(Integer.parseInt(mockRequest.getParameter("feedCount")) + 10, fakeEntryList.size());
     int remaining = fakeEntryList.size() - newFeedCount;
     List<FeedEntry> fakeSublist = fakeEntryList.subList(fakeEntryList.size() - newFeedCount, fakeEntryList.size());
-
-    Mockito.when(mockUserStore.getAllUsers()).thenReturn(fakeUserList);
-    Mockito.when(mockConversationStore.getAllConversations()).thenReturn(fakeConversationList);
-    Mockito.when(mockMessageStore.getAllMessages()).thenReturn(fakeMessageList);
 
     feedServlet.doPost(mockRequest, mockResponse);
 

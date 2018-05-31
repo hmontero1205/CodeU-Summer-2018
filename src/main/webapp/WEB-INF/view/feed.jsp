@@ -13,17 +13,15 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --%>
-<%@ page import="java.util.List" %>
 <%@ page import="codeu.model.data.FeedEntry" %>
-<%@ page import="java.util.ArrayList" %>
 <%@ page import="codeu.model.data.Message" %>
 <%@ page import="codeu.model.data.Conversation" %>
 <%@ page import="codeu.model.data.User" %>
+<%@ page import="codeu.model.store.basic.ConversationStore" %>
 <%@ page import="codeu.model.store.basic.UserStore" %>
 <%@ page import="java.util.Date" %>
-<%@ page import="java.text.DateFormat" %>
+<%@ page import="java.util.List" %>
 <%@ page import="java.text.SimpleDateFormat" %>
-<%@ page import="codeu.model.store.basic.ConversationStore" %>
 
 <%List<FeedEntry> entries = (List<FeedEntry>) request.getAttribute("entries");%>
 
@@ -37,9 +35,9 @@
       // scroll the chat div to the bottom
       function scrollFeed() {
           <%
-            if(!(Boolean) request.getAttribute("scrollUp")) {
+            if (!(Boolean) request.getAttribute("scrollUp")) {
           %>
-              var feedContainer = document.getElementById('fc');
+              var feedContainer = document.getElementsByClassName('feedcontainer');
               feedContainer.scrollTop = feedContainer.scrollHeight;
           <%
             }
@@ -67,12 +65,12 @@
 
   <hr/>
 
-  <div id="fc" class="feedcontainer">
+  <div class="feedcontainer">
 
     <ul>
       <%
         int remainingEntries = (Integer) request.getAttribute("remaining");
-        if(remainingEntries > 0) {
+        if (remainingEntries > 0) {
       %>
       <li>
         <form action="/feed" method="POST">
@@ -84,7 +82,8 @@
         }
         UserStore userStore = UserStore.getInstance();
         ConversationStore conversationStore = ConversationStore.getInstance();
-        SimpleDateFormat df = new SimpleDateFormat("[EEEE MMMM dd yyyy @ hh:mma]");
+        //TODO Format date based on user's location
+        SimpleDateFormat dateFormat = new SimpleDateFormat("[EEEE MMMM dd yyyy @ hh:mma]");
 
         for (FeedEntry f : entries) {
       %>
@@ -92,7 +91,7 @@
       <li>
 
       <%
-          String date = String.format(df.format(Date.from(f.getCreationTime())));
+          String date = String.format(dateFormat.format(Date.from(f.getCreationTime())));
       %>
         <b>
           <%= date %>
