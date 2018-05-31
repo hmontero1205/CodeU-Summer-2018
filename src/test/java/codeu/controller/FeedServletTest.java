@@ -14,6 +14,7 @@
 
 package codeu.controller;
 
+import static codeu.controller.FeedServlet.DEFAULT_ENTRY_COUNT;
 import codeu.model.data.Conversation;
 import codeu.model.data.FeedEntry;
 import codeu.model.data.Message;
@@ -37,6 +38,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
 public class FeedServletTest {
@@ -71,10 +73,7 @@ public class FeedServletTest {
 
     mockUserStore = Mockito.mock(UserStore.class);
     feedServlet.setUserStore(mockUserStore);
-  }
 
-  @Test
-  public void testDoGet() throws IOException, ServletException {
     ArrayList<User> fakeUserList = new ArrayList<>();
     fakeUserList.add(new User(UUID.randomUUID(), "fakenname", "fakepass", Instant.now()));
 
@@ -91,15 +90,43 @@ public class FeedServletTest {
     fakeEntryList.addAll(fakeConversationList);
     fakeEntryList.addAll(fakeUserList);
     fakeEntryList.addAll(fakeMessageList);
-    Collections.sort(fakeEntryList, new FeedServlet.FeedEntryComparator());
 
-    Mockito.when(mockUserStore.getAllUsers()).thenReturn(fakeUserList);
-    Mockito.when(mockConversationStore.getAllConversations()).thenReturn(fakeConversationList);
-    Mockito.when(mockMessageStore.getAllMessages()).thenReturn(fakeMessageList);
+    Collections.sort(fakeEntryList, new FeedServlet.FeedEntryComparator());
+    Mockito.when(feedServlet.getSortedEntries()).thenReturn(fakeEntryList);
+  }
+
+  @Test
+  public void testDoGet() throws IOException, ServletException {
+    List<FeedEntry> fakeEntryList = feedServlet.getSortedEntries();
+    int feedCount = Math.min(DEFAULT_ENTRY_COUNT, fakeEntryList.size());
+    int remaining = fakeEntryList.size() - feedCount;
+    List<FeedEntry> fakeSublist = fakeEntryList.subList(fakeEntryList.size() - feedCount, fakeEntryList.size());
 
     feedServlet.doGet(mockRequest, mockResponse);
 
-    Mockito.verify(mockRequest).setAttribute("entries", fakeEntryList);
+    Mockito.verify(mockRequest).setAttribute("entries", fakeSublist);
+    Mockito.verify(mockRequest).setAttribute("remaining", remaining);
+    Mockito.verify(mockRequest).setAttribute("feedCount", feedCount);
+    Mockito.verify(mockRequest).setAttribute("scrollUp", false);
+    Mockito.verify(mockRequestDispatcher).forward(mockRequest, mockResponse);
+  }
+
+  @Test
+  public void testDoPost() throws IOException, ServletException {
+    Mockito.when(mockRequest.getParameter("feedCount")).thenReturn("1");
+    Mockito.when(mockSession.getAttribute("user")).thenReturn("test_username");
+
+    List<FeedEntry> fakeEntryList = feedServlet.getSortedEntries();
+    int newFeedCount = Math.min(Integer.parseInt(mockRequest.getParameter("feedCount")) + 10, fakeEntryList.size());
+    int remaining = fakeEntryList.size() - newFeedCount;
+    List<FeedEntry> fakeSublist = fakeEntryList.subList(fakeEntryList.size() - newFeedCount, fakeEntryList.size());
+
+    feedServlet.doPost(mockRequest, mockResponse);
+
+    Mockito.verify(mockRequest).setAttribute("entries", fakeSublist);
+    Mockito.verify(mockRequest).setAttribute("remaining", remaining);
+    Mockito.verify(mockRequest).setAttribute("feedCount", newFeedCount);
+    Mockito.verify(mockRequest).setAttribute("scrollUp", true);
     Mockito.verify(mockRequestDispatcher).forward(mockRequest, mockResponse);
   }
 }
