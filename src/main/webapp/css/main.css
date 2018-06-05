@@ -56,3 +56,17 @@ input {
 button {
   font-size: 18px;
 }
+
+.feedcontainer {
+  overflow-y: scroll;
+  height: 700px;
+  background-color: white;
+}
+
+.feedcontainer ul {
+  list-style-type: none;
+}
+
+.feedcontainer a {
+  color: blue;
+}

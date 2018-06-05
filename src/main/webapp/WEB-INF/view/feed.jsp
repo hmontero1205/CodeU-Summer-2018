@@ -13,14 +13,15 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --%>
-<%@ page import="java.util.List" %>
 <%@ page import="codeu.model.data.FeedEntry" %>
-<%@ page import="java.util.ArrayList" %>
 <%@ page import="codeu.model.data.Message" %>
 <%@ page import="codeu.model.data.Conversation" %>
 <%@ page import="codeu.model.data.User" %>
+<%@ page import="codeu.model.store.basic.ConversationStore" %>
 <%@ page import="codeu.model.store.basic.UserStore" %>
 <%@ page import="java.util.Date" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.text.SimpleDateFormat" %>
 
 <%List<FeedEntry> entries = (List<FeedEntry>) request.getAttribute("entries");%>
 
@@ -30,8 +31,21 @@
 <head>
   <title>Activity Feed</title>
   <link rel="stylesheet" href="/css/main.css">
+  <script>
+      // scroll the chat div to the bottom
+      function scrollFeed() {
+          <%
+            if (!(Boolean) request.getAttribute("scrollUp")) {
+          %>
+              var feedContainer = document.getElementsByClassName('feedcontainer');
+              feedContainer.scrollTop = feedContainer.scrollHeight;
+          <%
+            }
+          %>
+      };
+  </script>
 </head>
-<body>
+<body onload="scrollFeed()">
 
 <nav>
   <a id="navTitle" href="/">CodeU Chat App</a>
@@ -48,32 +62,69 @@
 
 <div id="container">
   <h1>Activity Feed</h1>
+
+  <hr/>
+
   <div class="feedcontainer">
 
-    <ul class="mdl-list">
+    <ul>
       <%
+        int remainingEntries = (Integer) request.getAttribute("remaining");
+        if (remainingEntries > 0) {
+      %>
+      <li>
+        <form action="/feed" method="POST">
+          <input type="hidden" name="feedCount" value=<%= request.getAttribute("feedCount")%>>
+          <button type="submit">Show more(<%= remainingEntries %>)</button>
+        </form>
+      </li>
+      <%
+        }
         UserStore userStore = UserStore.getInstance();
+        ConversationStore conversationStore = ConversationStore.getInstance();
+        //TODO Format date based on user's location
+        SimpleDateFormat dateFormat = new SimpleDateFormat("[EEEE MMMM dd yyyy @ hh:mma]");
+
         for (FeedEntry f : entries) {
-          String content = String.format("%s, ", Date.from(f.getCreationTime()));
+      %>
+
+      <li>
+
+      <%
+          String date = String.format(dateFormat.format(Date.from(f.getCreationTime())));
+      %>
+        <b>
+          <%= date %>
+        </b>
+
+      <%
           if (f instanceof Message) {
             Message m = (Message) f;
-            content += String.format("Type: Message, User: %s, Content: %s\n",
-                    userStore.getUser(m.getAuthorId()).getName(), m.getContent());
+            String sender = userStore.getUser(m.getAuthorId()).getName();
+            String convoTitle = conversationStore.getConversationWithUUID(m.getConversationId()).getTitle();
+      %>
+        <a href="/"><%= sender %></a> sent a message to <a href=<%= "/chat/" + convoTitle%>> <%= convoTitle %> </a>
+      <%
           }
-
           if (f instanceof Conversation) {
             Conversation c = (Conversation) f;
-            content += String.format("Type: Conversation, Title: %s, Owner: %s\n", c.getTitle(),
-                    userStore.getUser(c.getOwnerId()).getName());
-          }
+            String creator = userStore.getUser(c.getOwnerId()).getName();
+      %>
 
+        <a href="/"> <%= creator %></a> created a new conversation:
+        <a href=<%= "/chat/" + c.getTitle() %>> <%= c.getTitle() %> </a>
+
+      <%
+          }
           if (f instanceof User) {
             User u = (User) f;
-            content += String.format("Type: User, Username: %s\n", u.getName());
+      %>
+        <a href="/"> <%= u.getName()%></a> joined the chat app
+
+      <%
           }
       %>
 
-      <li><%= content %>
       </li>
 
       <%
