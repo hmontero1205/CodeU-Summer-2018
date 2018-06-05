@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Servlet class responsible for the conversations page.
+ * Servlet class responsible for the activity feed page.
  */
 public class FeedServlet extends HttpServlet {
 
@@ -49,6 +49,11 @@ public class FeedServlet extends HttpServlet {
    * Store class that gives access to Messages.
    */
   private MessageStore messageStore;
+
+  /**
+   * Default number of entries on the feed page
+   */
+  public static final int DEFAULT_ENTRY_COUNT = 20;
 
   /**
    * Set up state for handling conversation-related requests. This method is only called when
@@ -86,6 +91,51 @@ public class FeedServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
+
+    List<FeedEntry> entries = getSortedEntries();
+    //Either display default number of entries or the size of list entries, whichever is smaller
+    int feedCount = Math.min(DEFAULT_ENTRY_COUNT, entries.size());
+    int remaining = entries.size() - feedCount;
+
+    //Truncate entries to the last newFeedCount amount of entries
+    request.setAttribute("entries", entries.subList(entries.size() - feedCount, entries.size()));
+    request.setAttribute("feedCount", feedCount);
+    request.setAttribute("remaining", remaining);
+    request.setAttribute("scrollUp", false);
+    request.getRequestDispatcher("/WEB-INF/view/feed.jsp").forward(request, response);
+  }
+
+  /**
+   * This function fires when a user submits the form on the activity feed page.
+   * TODO Implement threshold for fetching entries.
+   */
+  @Override
+  public void doPost(HttpServletRequest request, HttpServletResponse response)
+      throws IOException, ServletException {
+
+    List<FeedEntry> entries = getSortedEntries();
+
+    //Either display current feed count + 10 or the size of list entries, whichever is smaller
+    int newFeedCount = Math.min(Integer.parseInt(request.getParameter("feedCount")) + 10, entries.size());
+    int remaining = entries.size() - newFeedCount;
+
+    //Truncate entries to the last newFeedCount amount of entries
+    request.setAttribute("entries", entries.subList(entries.size() - newFeedCount, entries.size()));
+    request.setAttribute("feedCount", newFeedCount);
+    request.setAttribute("remaining", remaining);
+    request.setAttribute("scrollUp", true);
+    request.getRequestDispatcher("/WEB-INF/view/feed.jsp").forward(request, response);
+  }
+
+  /**
+   * Sets the UserStore used by this servlet. This function provides a common setup method for use
+   * by the test framework or the servlet's init() function.
+   */
+  void setMessageStore(MessageStore messageStore) {
+    this.messageStore = messageStore;
+  }
+
+  public List<FeedEntry> getSortedEntries() {
     List<Conversation> conversations = conversationStore.getAllConversations();
     List<User> users = userStore.getAllUsers();
     List<Message> messages = messageStore.getAllMessages();
@@ -98,26 +148,7 @@ public class FeedServlet extends HttpServlet {
 
     Collections.sort(entries, new FeedEntryComparator());
 
-    request.setAttribute("entries", entries);
-    request.getRequestDispatcher("/WEB-INF/view/feed.jsp").forward(request, response);
-  }
-
-  /**
-   * This function fires when a user submits the form on the activity feed page.
-   * TODO Implement user-defined threshold
-   */
-  @Override
-  public void doPost(HttpServletRequest request, HttpServletResponse response)
-      throws IOException, ServletException, UnsupportedOperationException {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Sets the UserStore used by this servlet. This function provides a common setup method for use
-   * by the test framework or the servlet's init() function.
-   */
-  void setMessageStore(MessageStore messageStore) {
-    this.messageStore = messageStore;
+    return entries;
   }
 
   /**
