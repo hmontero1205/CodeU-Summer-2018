@@ -15,6 +15,7 @@
 package codeu.controller;
 
 import static codeu.controller.FeedServlet.DEFAULT_ENTRY_COUNT;
+
 import codeu.model.data.Conversation;
 import codeu.model.data.FeedEntry;
 import codeu.model.data.Message;
