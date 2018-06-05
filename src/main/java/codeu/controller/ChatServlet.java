@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
+import org.jsoup.nodes.Document;
 
 /** Servlet class responsible for the chat page. */
 public class ChatServlet extends HttpServlet {
@@ -137,11 +138,13 @@ public class ChatServlet extends HttpServlet {
       response.sendRedirect("/conversations");
       return;
     }
-
+    
+    Document.OutputSettings outputSettings = new Document.OutputSettings();
+    outputSettings.prettyPrint(false);
     String messageContent = request.getParameter("message");
 
     // this removes any HTML from the message content
-    String cleanedMessageContent = Jsoup.clean(messageContent, Whitelist.none());
+    String cleanedMessageContent = Jsoup.clean(messageContent, "", Whitelist.simpleText(), outputSettings);
 
     Message message =
         new Message(
