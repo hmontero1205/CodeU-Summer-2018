@@ -15,9 +15,9 @@ User requestUser = (User) request.getAttribute("requestUser");
   <nav>
     <a id="navTitle" href="/">CodeU Chat App</a>
     <a href="/conversations">Conversations</a>
-    <% if(request.getSession().getAttribute("user") != null){ %>
+    <% if(request.getSession().getAttribute("user") != null) { %>
       <a>Hello <%= request.getSession().getAttribute("user") %>!</a>
-    <% } else{ %>
+    <% } else { %>
       <a href="/login">Login</a>
     <% } %>
     <a href="/about.jsp">About</a>
@@ -34,7 +34,7 @@ User requestUser = (User) request.getAttribute("requestUser");
     <% } %>
 
     <% if(String.valueOf(request.getSession().getAttribute("user"))
-         .equals(requestUser.getName())){ %>
+         .equals(requestUser.getName())) { %>
       <p>Edit Your Profile!</p>
       <form action="/user/<%= request.getSession().getAttribute("user") %>" method="POST">
           <div class="form-group">

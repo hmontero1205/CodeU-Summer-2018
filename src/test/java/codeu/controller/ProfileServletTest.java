@@ -30,6 +30,7 @@ public class ProfileServletTest {
   private HttpServletResponse mockResponse;
   private RequestDispatcher mockRequestDispatcher;
   private UserStore mockUserStore;
+  private User fakeUser;
 
   @Before
   public void setup() {
@@ -46,18 +47,18 @@ public class ProfileServletTest {
 
     mockUserStore = Mockito.mock(UserStore.class);
     profServlet.setUserStore(mockUserStore);
+
+    fakeUser = new User(
+        UUID.randomUUID(),
+        "test_username",
+        "$2a$10$bBiLUAVmUFK6Iwg5rmpBUOIBW6rIMhU1eKfi3KR60V9UXaYTwPfHy",
+        Instant.now());
   }
 
   @Test
   public void testDoGet() throws IOException, ServletException {
     Mockito.when(mockRequest.getRequestURI()).thenReturn("/user/test_user");
 
-    User fakeUser =
-        new User(
-            UUID.randomUUID(),
-            "test_username",
-            "$2a$10$bBiLUAVmUFK6Iwg5rmpBUOIBW6rIMhU1eKfi3KR60V9UXaYTwPfHy",
-            Instant.now());
     Mockito.when(mockUserStore.getUser("test_user"))
         .thenReturn(fakeUser);
 
@@ -83,12 +84,6 @@ public class ProfileServletTest {
     Mockito.when(mockRequest.getRequestURI()).thenReturn("/user/test_username");
     Mockito.when(mockSession.getAttribute("user")).thenReturn("test_username");
 
-    User fakeUser =
-        new User(
-            UUID.randomUUID(),
-            "test_username",
-            "$2a$10$bBiLUAVmUFK6Iwg5rmpBUOIBW6rIMhU1eKfi3KR60V9UXaYTwPfHy",
-            Instant.now());
     Mockito.when(mockUserStore.getUser("test_username")).thenReturn(fakeUser);
 
     Mockito.when(mockRequest.getParameter("inputBio")).thenReturn("Test bio.");
@@ -98,7 +93,6 @@ public class ProfileServletTest {
     ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
     Mockito.verify(mockUserStore).updateUser(userArgumentCaptor.capture());
     Assert.assertEquals("Test bio.", userArgumentCaptor.getValue().getBio());
-
     Mockito.verify(mockResponse).sendRedirect("/user/test_username");
   }
 

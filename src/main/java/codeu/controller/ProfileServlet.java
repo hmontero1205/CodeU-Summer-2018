@@ -36,7 +36,7 @@ public class ProfileServlet extends HttpServlet {
   void setUserStore(UserStore userStore) {
     this.userStore = userStore;
   }
-
+  
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
@@ -57,14 +57,14 @@ public class ProfileServlet extends HttpServlet {
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
-  String requestUrl = request.getRequestURI();
-  String userName = requestUrl.substring("/user/".length());
-  User user = userStore.getUser(userName);
-  if (user == null) {
-    // couldn't find user, redirect to conversation list
-    System.out.println("User was null: " + userName);
-    response.sendRedirect("/conversations");
-    return;
+    String requestUrl = request.getRequestURI();
+    String userName = requestUrl.substring("/user/".length());
+    User user = userStore.getUser(userName);
+    if (user == null) {
+      // couldn't find user, redirect to conversation list
+      System.out.println("User was null: " + userName);
+      response.sendRedirect("/conversations");
+      return;
   }
 
   //updates the bio of the person submitting the new bio form
