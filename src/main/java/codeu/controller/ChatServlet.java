@@ -143,7 +143,7 @@ public class ChatServlet extends HttpServlet {
     outputSettings.prettyPrint(false);
     String messageContent = request.getParameter("message");
 
-    // this removes any HTML from the message content
+    // this line Whitelists the script tag, which improves security.
     String cleanedMessageContent = Jsoup.clean(messageContent, "", Whitelist.simpleText(), outputSettings);
 
     Message message =
