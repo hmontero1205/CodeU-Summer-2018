@@ -64,6 +64,11 @@ public class UserStore {
     users = new ArrayList<>();
   }
 
+  /** Access the current set of users known to the application. */
+  public List<User> getAllUsers() {
+    return users;
+  }
+
   /**
    * Access the User object with the given name.
    *
