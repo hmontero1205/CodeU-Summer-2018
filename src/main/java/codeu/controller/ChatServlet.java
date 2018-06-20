@@ -28,9 +28,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.jsoup.nodes.Document;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
-import org.jsoup.nodes.Document;
+
 
 /** Servlet class responsible for the chat page. */
 public class ChatServlet extends HttpServlet {
