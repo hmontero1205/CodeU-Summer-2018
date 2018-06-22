@@ -132,8 +132,5 @@ public class UserStore {
     this.users = users;
   }
   
-  public List<User> getAllUsers() {
-	  return users;
-  }
 }
 
