@@ -103,7 +103,7 @@
             String sender = userStore.getUser(m.getAuthorId()).getName();
             String convoTitle = conversationStore.getConversationWithUUID(m.getConversationId()).getTitle();
       %>
-        <a href="/"><%= sender %></a> sent a message to <a href=<%= "/chat/" + convoTitle%>> <%= convoTitle %> </a>
+        <a href=<%= "/user/" + sender%>><%= sender %></a> sent a message to <a href=<%= "/chat/" + convoTitle%>> <%= convoTitle %> </a>
       <%
           }
           if (f instanceof Conversation) {

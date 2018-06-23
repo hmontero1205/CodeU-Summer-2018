@@ -21,6 +21,7 @@ User requestUser = (User) request.getAttribute("requestUser");
       <a href="/login">Login</a>
     <% } %>
     <a href="/about.jsp">About</a>
+    <a href="/feed">Activity Feed</a>
   </nav>
 
   <div id="container">
