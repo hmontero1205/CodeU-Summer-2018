@@ -65,8 +65,25 @@ button {
 
 .feedcontainer ul {
   list-style-type: none;
+  padding-left: 0px;
+  margin-top:0px;
 }
 
 .feedcontainer a {
   color: blue;
+}
+
+.entry {
+  border:2px solid black;
+  background-color: #eeeeee;
+  padding:5px;
+}
+
+.hidden-messages {
+  display: none;
+  border: 2px solid red;
+}
+
+.show-button {
+
 }

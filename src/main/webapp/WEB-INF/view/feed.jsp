@@ -19,9 +19,8 @@
 <%@ page import="codeu.model.data.User" %>
 <%@ page import="codeu.model.store.basic.ConversationStore" %>
 <%@ page import="codeu.model.store.basic.UserStore" %>
-<%@ page import="java.util.Date" %>
-<%@ page import="java.util.List" %>
 <%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="java.util.*" %>
 
 <%List<FeedEntry> entries = (List<FeedEntry>) request.getAttribute("entries");%>
 
@@ -69,13 +68,14 @@
 
     <ul>
       <%
+        List<Message> messageBox = new ArrayList<>();
         int remainingEntries = (Integer) request.getAttribute("remaining");
         if (remainingEntries > 0) {
       %>
       <li>
         <form action="/feed" method="POST">
           <input type="hidden" name="feedCount" value=<%= request.getAttribute("feedCount")%>>
-          <button type="submit">Show more(<%= remainingEntries %>)</button>
+          <button type="submit">Show older (<%= remainingEntries %>)</button>
         </form>
       </li>
       <%
@@ -88,46 +88,166 @@
         for (FeedEntry f : entries) {
       %>
 
-      <li>
-
-      <%
-          String date = String.format(dateFormat.format(Date.from(f.getCreationTime())));
-      %>
-        <b>
-          <%= date %>
-        </b>
 
       <%
           if (f instanceof Message) {
             Message m = (Message) f;
-            String sender = userStore.getUser(m.getAuthorId()).getName();
-            String convoTitle = conversationStore.getConversationWithUUID(m.getConversationId()).getTitle();
+            if(messageBox.size() == 0 || (messageBox.get(0).getAuthorId().equals(m.getAuthorId()) && messageBox.get(0).getConversationId().equals(m.getConversationId()))) {
+              messageBox.add(m);
+              continue;
+            } else {
+              if(messageBox.size() == 1) {
+                Message mSingle = messageBox.get(0);
+                String sender = userStore.getUser(mSingle.getAuthorId()).getName();
+                String convoTitle = conversationStore.getConversationWithUUID(mSingle.getConversationId()).getTitle();
+
       %>
-        <a href=<%= "/user/" + sender%>><%= sender %></a> sent a message to <a href=<%= "/chat/" + convoTitle%>> <%= convoTitle %> </a>
+                <li class="entry"><b><%= String.format(dateFormat.format(Date.from(mSingle.getCreationTime()))) %></b> <a href=<%= "/user/" + sender%>><%= sender %></a> sent "<%= mSingle.getContent()%>" to <a href=<%= "/chat/" + convoTitle%>> <%= convoTitle %> </a></li>
       <%
+              } else {
+                String senderHeader = userStore.getUser(messageBox.get(0).getAuthorId()).getName();
+                String convoTitleHeader = conversationStore.getConversationWithUUID(messageBox.get(0).getConversationId()).getTitle();
+      %>
+                <li class="entry"><b><%= String.format(dateFormat.format(Date.from(f.getCreationTime()))) %></b> <a href=<%= "/user/" + senderHeader%>><%= senderHeader %></a> sent <%= messageBox.size()%> messages to <a href=<%= "/chat/" + convoTitleHeader%>> <%= convoTitleHeader %> </a>
+                  <br/><button class="show-button">Expand</button><div class="hidden-messages"><ul>
+      <%
+                for(Message mb : messageBox) {
+                  String sender = userStore.getUser(mb.getAuthorId()).getName();
+                  String convoTitle = conversationStore.getConversationWithUUID(mb.getConversationId()).getTitle();
+
+      %>
+                  <li class="entry"><b><%= String.format(dateFormat.format(Date.from(mb.getCreationTime()))) %></b> <a href=<%= "/user/" + sender%>><%= sender %></a> sent "<%= mb.getContent()%>" to <a href=<%= "/chat/" + convoTitle%>> <%= convoTitle %> </a></li>
+      <%
+                }
+      %>
+                  </ul></div>
+                </li>
+      <%
+              }
+              messageBox.clear();
+              messageBox.add(m);
+            }
+
           }
+      %>
+
+
+      <%
           if (f instanceof Conversation) {
+            if(messageBox.size() > 0) {
+              if(messageBox.size() == 1) {
+                Message mSingle = messageBox.get(0);
+                String sender = userStore.getUser(mSingle.getAuthorId()).getName();
+                String convoTitle = conversationStore.getConversationWithUUID(mSingle.getConversationId()).getTitle();
+
+      %>
+                <li class="entry"><b><%= String.format(dateFormat.format(Date.from(mSingle.getCreationTime()))) %></b> <a href=<%= "/user/" + sender%>><%= sender %></a> sent "<%= mSingle.getContent()%>" to <a href=<%= "/chat/" + convoTitle%>> <%= convoTitle %> </a></li>
+      <%
+              } else {
+                String senderHeader = userStore.getUser(messageBox.get(0).getAuthorId()).getName();
+                String convoTitleHeader = conversationStore.getConversationWithUUID(messageBox.get(0).getConversationId()).getTitle();
+      %>
+                <li class="entry"><b><%= String.format(dateFormat.format(Date.from(f.getCreationTime()))) %></b> <a href=<%= "/user/" + senderHeader%>><%= senderHeader %></a> sent <%= messageBox.size()%> messages to <a href=<%= "/chat/" + convoTitleHeader%>> <%= convoTitleHeader %> </a>
+                  <br/><button class="show-button">Expand</button><div class="hidden-messages"><ul>
+      <%
+                for(Message mb : messageBox) {
+                  String sender = userStore.getUser(mb.getAuthorId()).getName();
+                  String convoTitle = conversationStore.getConversationWithUUID(mb.getConversationId()).getTitle();
+      %>
+                  <li class="entry"><b><%= String.format(dateFormat.format(Date.from(mb.getCreationTime()))) %></b> <a href=<%= "/user/" + sender%>><%= sender %></a> sent "<%= mb.getContent()%>" to <a href=<%= "/chat/" + convoTitle%>> <%= convoTitle %> </a></li>
+      <%
+                }
+      %>
+                  </ul></div>
+                </li>
+      <%
+              }
+              messageBox.clear();
+            }
             Conversation c = (Conversation) f;
             String creator = userStore.getUser(c.getOwnerId()).getName();
       %>
 
-        <a href="/"> <%= creator %></a> created a new conversation:
-        <a href=<%= "/chat/" + c.getTitle() %>> <%= c.getTitle() %> </a>
+        <li class="entry"><b><%= String.format(dateFormat.format(Date.from(f.getCreationTime()))) %></b> <a href="/"> <%= creator %></a> created a new conversation:
+          <a href=<%= "/chat/" + c.getTitle() %>> <%= c.getTitle() %> </a></li>
 
       <%
           }
+      %>
+
+
+
+      <%
           if (f instanceof User) {
+            if(messageBox.size() > 0) {
+              if(messageBox.size() == 1) {
+                Message mSingle = messageBox.get(0);
+                String sender = userStore.getUser(mSingle.getAuthorId()).getName();
+                String convoTitle = conversationStore.getConversationWithUUID(mSingle.getConversationId()).getTitle();
+      %>
+                <li class="entry"><b><%= String.format(dateFormat.format(Date.from(mSingle.getCreationTime()))) %></b> <a href=<%= "/user/" + sender%>><%= sender %></a> sent "<%= mSingle.getContent()%>" to <a href=<%= "/chat/" + convoTitle%>> <%= convoTitle %> </a></li>
+      <%
+              } else {
+                String senderHeader = userStore.getUser(messageBox.get(0).getAuthorId()).getName();
+                String convoTitleHeader = conversationStore.getConversationWithUUID(messageBox.get(0).getConversationId()).getTitle();
+      %>
+                <li class="entry"><b><%= String.format(dateFormat.format(Date.from(f.getCreationTime()))) %></b> <a href=<%= "/user/" + senderHeader%>><%= senderHeader %></a> sent <%= messageBox.size()%> messages to <a href=<%= "/chat/" + convoTitleHeader%>> <%= convoTitleHeader %> </a>
+                  <br/><button class="show-button">Expand</button><div class="hidden-messages"><ul>
+      <%
+                for(Message mb : messageBox) {
+                  String sender = userStore.getUser(mb.getAuthorId()).getName();
+                  String convoTitle = conversationStore.getConversationWithUUID(mb.getConversationId()).getTitle();
+      %>
+                  <li class="entry"><b><%= String.format(dateFormat.format(Date.from(mb.getCreationTime()))) %></b> <a href=<%= "/user/" + sender%>><%= sender %></a> sent "<%= mb.getContent()%>" to <a href=<%= "/chat/" + convoTitle%>> <%= convoTitle %> </a></li>
+      <%
+                }
+      %>
+                  </ul></div>
+                </li>
+      <%
+              }
+              messageBox.clear();
+            }
             User u = (User) f;
       %>
-        <a href="/"> <%= u.getName()%></a> joined the chat app
+      <li class="entry"><b><%= String.format(dateFormat.format(Date.from(f.getCreationTime()))) %></b> <a href=<%= "/user/" + u.getName()%>> <%= u.getName()%></a> joined the chat app</li>
 
       <%
           }
       %>
 
-      </li>
 
       <%
+        }
+        if(messageBox.size() > 0) {
+          if(messageBox.size() == 1) {
+            Message mSingle = messageBox.get(0);
+            String sender = userStore.getUser(mSingle.getAuthorId()).getName();
+            String convoTitle = conversationStore.getConversationWithUUID(mSingle.getConversationId()).getTitle();
+
+      %>
+            <li class="entry"><b><%= String.format(dateFormat.format(Date.from(mSingle.getCreationTime()))) %></b> <a href=<%= "/user/" + sender%>><%= sender %></a> sent "<%= mSingle.getContent()%>" to <a href=<%= "/chat/" + convoTitle%>> <%= convoTitle %> </a></li>
+      <%
+          } else {
+            String senderHeader = userStore.getUser(messageBox.get(0).getAuthorId()).getName();
+            String convoTitleHeader = conversationStore.getConversationWithUUID(messageBox.get(0).getConversationId()).getTitle();
+      %>
+            <li class="entry"><b><%= String.format(dateFormat.format(Date.from(messageBox.get(0).getCreationTime()))) %></b> <a href=<%= "/user/" + senderHeader%>><%= senderHeader %></a> sent <%= messageBox.size()%> messages to <a href=<%= "/chat/" + convoTitleHeader%>> <%= convoTitleHeader %> </a>
+              <br/><button class="show-button">Expand</button><div class="hidden-messages"><ul>
+      <%
+            for(Message mb : messageBox) {
+              String sender = userStore.getUser(mb.getAuthorId()).getName();
+              String convoTitle = conversationStore.getConversationWithUUID(mb.getConversationId()).getTitle();
+      %>
+              <li class="entry"><b><%= String.format(dateFormat.format(Date.from(mb.getCreationTime()))) %></b> <a href=<%= "/user/" + sender%>><%= sender %></a> sent "<%= mb.getContent()%>" to <a href=<%= "/chat/" + convoTitle%>> <%= convoTitle %> </a></li>
+      <%
+            }
+      %>
+              </ul></div>
+            </li>
+      <%
+          }
+          messageBox.clear();
         }
       %>
     </ul>
