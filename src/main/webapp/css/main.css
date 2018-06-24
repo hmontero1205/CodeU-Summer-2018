@@ -81,7 +81,10 @@ button {
 
 .hidden-messages {
   display: none;
-  border: 2px solid red;
+}
+
+.hidden-messages ul li {
+  background-color: white;
 }
 
 .show-button {
