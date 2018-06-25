@@ -63,7 +63,7 @@ button {
   background-color: white;
 }
 
-.feedcontainer ul {
+.feedcontainer ul, .listing ul {
   list-style-type: none;
   padding-left: 0px;
   margin-top:0px;
@@ -87,6 +87,35 @@ button {
   background-color: white;
 }
 
-.show-button {
+.container-listing {
+  margin-left: auto;
+  margin-right: auto;
+  width: 800px;
+  display: grid;
+  grid-template-columns: 50% 50%;
+}
 
+.listing {
+  display: inline-block;
+  height: 250px;
+  flex: auto;
+  background-color:white;
+  overflow-y:scroll;
+}
+
+.grid-header {
+  grid-column-start: 1;
+  grid-column-end: 3;
+  color: #757575;
+  font-family: sans-serif;
+  font-size: 30px;
+  font-weight: bold;
+  line-height: 1.6;
+}
+
+.listing-name {
+  color: #757575;
+  font-family: sans-serif;
+  font-size: 20px;
+  line-height: 1.6;
 }

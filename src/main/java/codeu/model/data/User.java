@@ -42,7 +42,7 @@ public class User implements FeedEntry{
     this.passwordHash = passwordHash;
     this.creation = creation;
     this.bio = bio;
-    this.unfollowing = unfollowing;
+    this.unfollowing = (unfollowing == null) ? "" : unfollowing;
   }
 
   public User(UUID id, String name, String passwordHash, Instant creation) {
@@ -86,4 +86,7 @@ public class User implements FeedEntry{
 
   /** Returns unfollowed entities of this User. */
   public String getUnfollowing() { return unfollowing; }
+
+  /** Sets new unfollowed string of entities for this User. */
+  public void setUnfollowing(String newUnfollowing) {unfollowing = newUnfollowing; }
 }

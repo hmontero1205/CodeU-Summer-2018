@@ -76,7 +76,7 @@ public class FeedServletTest {
     feedServlet.setUserStore(mockUserStore);
 
     ArrayList<User> fakeUserList = new ArrayList<>();
-    fakeUserList.add(new User(UUID.randomUUID(), "fakenname", "fakepass", Instant.now()));
+    fakeUserList.add(new User(UUID.randomUUID(), "fakename", "fakepass", Instant.now()));
 
     ArrayList<Conversation> fakeConversationList = new ArrayList<>();
     fakeConversationList.add(
@@ -99,6 +99,7 @@ public class FeedServletTest {
   @Test
   public void testDoGet() throws IOException, ServletException {
     List<FeedEntry> fakeEntryList = feedServlet.getSortedEntries();
+    feedServlet.filterUnfollowedEntries(mockRequest, fakeEntryList);
     int feedCount = Math.min(DEFAULT_ENTRY_COUNT, fakeEntryList.size());
     int remaining = fakeEntryList.size() - feedCount;
     List<FeedEntry> fakeSublist = fakeEntryList.subList(fakeEntryList.size() - feedCount, fakeEntryList.size());
@@ -115,9 +116,10 @@ public class FeedServletTest {
   @Test
   public void testDoPost() throws IOException, ServletException {
     Mockito.when(mockRequest.getParameter("feedCount")).thenReturn("1");
-    Mockito.when(mockSession.getAttribute("user")).thenReturn("test_username");
+    Mockito.when(mockSession.getAttribute("user")).thenReturn("fakename");
 
     List<FeedEntry> fakeEntryList = feedServlet.getSortedEntries();
+    feedServlet.filterUnfollowedEntries(mockRequest, fakeEntryList);
     int newFeedCount = Math.min(Integer.parseInt(mockRequest.getParameter("feedCount")) + 10, fakeEntryList.size());
     int remaining = fakeEntryList.size() - newFeedCount;
     List<FeedEntry> fakeSublist = fakeEntryList.subList(fakeEntryList.size() - newFeedCount, fakeEntryList.size());

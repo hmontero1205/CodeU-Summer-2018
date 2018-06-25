@@ -21,6 +21,7 @@
 <%@ page import="codeu.model.store.basic.UserStore" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.*" %>
+<%@ page import="codeu.controller.FeedServlet" %>
 
 <%List<FeedEntry> entries = (List<FeedEntry>) request.getAttribute("entries");%>
 
@@ -79,23 +80,33 @@
 
     <ul>
       <%
-        List<Message> messageBox = new ArrayList<>();
         int remainingEntries = (Integer) request.getAttribute("remaining");
-        if (remainingEntries > 0) {
+        if(remainingEntries > 0) {
       %>
-      <li>
-        <form action="/feed" method="POST">
-          <input type="hidden" name="feedCount" value=<%= request.getAttribute("feedCount")%>>
-          <button type="submit">Show older (<%= remainingEntries %>)</button>
-        </form>
-      </li>
+        <li>
+          <form action="/feed" method="POST">
+            <input type="hidden" name="feedCount" value=<%= request.getAttribute("feedCount")%>>
+            <button submit">Show older (<%= remainingEntries%>)</button>
+          </form>
+        </li>
       <%
         }
         UserStore userStore = UserStore.getInstance();
+        List<String> unfollowing = null;
+        if(request.getSession().getAttribute("user") != null) {
+          User currentUser = userStore.getUser((String) request.getSession().getAttribute("user"));
+          unfollowing = new ArrayList<>(Arrays.asList(currentUser.getUnfollowing().split("_")));
+        }
         ConversationStore conversationStore = ConversationStore.getInstance();
         //TODO Format date based on user's location
         SimpleDateFormat dateFormat = new SimpleDateFormat("[EEEE MMMM dd yyyy @ hh:mma]");
 
+        /***
+         * messageBox stores Messages as entries is iterated over to condense the activity feed.
+         * If a Message is encountered that doesn't belong in messageBox or if another FeedEntry is to
+         * be displayed, messageBox has its contents displayed and is then emptied.
+         */
+        List<Message> messageBox = new ArrayList<>();
         for (FeedEntry f : entries) {
           if (f instanceof Message) {
             Message m = (Message) f;
@@ -116,6 +127,7 @@
                 </li>
       <%
               } else {
+                //Display messageBox contents and empty messageBox before adding new Message
                 String senderHeader = userStore.getUser(mLast.getAuthorId()).getName();
                 String convoTitleHeader = conversationStore.getConversationWithUUID(mLast.getConversationId()).getTitle();
       %>
@@ -163,6 +175,7 @@
                 </li>
       <%
               } else {
+                //Display messageBox contents and empty messageBox before displaying Conversation
                 String senderHeader = userStore.getUser(mLast.getAuthorId()).getName();
                 String convoTitleHeader = conversationStore.getConversationWithUUID(mLast.getConversationId()).getTitle();
       %>
@@ -217,6 +230,7 @@
                 </li>
       <%
               } else {
+                //Display messageBox contents and empty messageBox before displaying User
                 String senderHeader = userStore.getUser(mLast.getAuthorId()).getName();
                 String convoTitleHeader = conversationStore.getConversationWithUUID(mLast.getConversationId()).getTitle();
       %>
@@ -256,6 +270,7 @@
           }
         }
 
+        //Display contents of messageBox if it has any
         if(messageBox.size() > 0) {
           Message mLast = messageBox.get(messageBox.size() - 1);
           if(messageBox.size() == 1) {
@@ -303,6 +318,107 @@
       %>
     </ul>
   </div>
+
+  <%
+    //Display Preferences section only if logged in
+    if (request.getSession().getAttribute("user") != null) {
+  %>
+
+  <div class = container-listing>
+    <div class="grid-header">
+      Preferences
+    </div>
+    <div class="listing-name">Users</div>
+    <div class="listing-name">Conversations</div>
+    <div class="listing">
+      <ul>
+        <%
+          List<User> sortedUsers = userStore.getAllUsers();
+          Collections.sort(sortedUsers, new FeedServlet.UserComparator());
+
+          for(User u : sortedUsers) {
+            String name = u.getName();
+            if(name.equals(request.getSession().getAttribute("user"))) continue;
+        %>
+
+        <li class="entry">
+          <a href=<%= "/user/" + name %>><%= name %></a>
+        <%
+          if(unfollowing.contains(u.getId().toString())) {
+        %>
+          <form style="display:inline" action="/feed" method="POST">
+            <input type="hidden" name="follow" value="true"/>
+            <input type="hidden" name="entityUUID" value=<%= u.getId().toString()%> />
+            <button type="submit"> Follow </button>
+          </form>
+        <%
+          } else {
+        %>
+          <form style="display:inline" action="/feed" method="POST">
+            <input type="hidden" name="follow" value="false"/>
+            <input type="hidden" name="entityUUID" value=<%= u.getId().toString()%> />
+            <button type="submit"> Unfollow </button>
+          </form>
+        <%
+          }
+        %>
+        </li>
+        <%
+          }
+
+
+
+
+        %>
+      </ul>
+    </div>
+    <div class="listing">
+      <ul>
+        <%
+          List<Conversation> sortedConvos = conversationStore.getAllConversations();
+          Collections.sort(sortedConvos, new FeedServlet.ConversationComparator());
+
+          for(Conversation c : sortedConvos) {
+            String title = c.getTitle();
+        %>
+
+        <li class="entry">
+          <a href=<%= "/conversation/" + title %>><%= title %></a>
+          <%
+            if(unfollowing.contains(c.getId().toString())) {
+          %>
+          <form style="display:inline" action="/feed" method="POST">
+            <input type="hidden" name="follow" value="true"/>
+            <input type="hidden" name="entityUUID" value=<%= c.getId().toString()%> />
+            <button type="submit"> Follow </button>
+          </form>
+          <%
+          } else {
+          %>
+          <form style="display:inline" action="/feed" method="POST">
+            <input type="hidden" name="follow" value="false"/>
+            <input type="hidden" name="entityUUID" value=<%= c.getId().toString()%> />
+            <button type="submit"> Unfollow </button>
+          </form>
+          <%
+            }
+          %>
+        </li>
+        <%
+          }
+
+
+
+
+        %>
+      </ul>
+    </div>
+  </div>
+
+  <%
+    }
+  %>
+
 </div>
 </body>
 </html>
