@@ -115,4 +115,9 @@ public class ConversationStore {
   public void setConversations(List<Conversation> conversations) {
     this.conversations = conversations;
   }
+
+  /**Updates the conversation. **/
+  public void updateConversation(Conversation conversation) {
+    persistentStorageAgent.writeThrough(conversation);
+  }
 }

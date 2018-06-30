@@ -206,4 +206,26 @@ public class ChatServletTest {
 
     Mockito.verify(mockResponse).sendRedirect("/chat/test_conversation");
   }
+
+  @Test
+  public void testDoPost_AddTag() throws IOException, ServletException {
+    Mockito.when(mockRequest.getRequestURI()).thenReturn("/chat/test_conversation");
+    Mockito.when(mockSession.getAttribute("user")).thenReturn("test_username");
+
+    User fakeUser = new User(UUID.randomUUID(), "test_username", "test_username", Instant.now());
+    Mockito.when(mockUserStore.getUser("test_username")).thenReturn(fakeUser);
+
+    Conversation fakeConversation =
+        new Conversation(UUID.randomUUID(), UUID.randomUUID(), "test_conversation", Instant.now());
+    Mockito.when(mockConversationStore.getConversationWithTitle("test_conversation"))
+        .thenReturn(fakeConversation);
+
+    Mockito.when(mockRequest.getParameter("tag")).thenReturn("tag1");
+    chatServlet.doPost(mockRequest, mockResponse);
+
+    ArgumentCaptor<Conversation> convoArgumentCaptor = ArgumentCaptor.forClass(Conversation.class);
+    Mockito.verify(mockConversationStore).updateConversation(convoArgumentCaptor.capture());
+    Assert.assertEquals("tag1", convoArgumentCaptor.getValue().getStringTags());
+    Mockito.verify(mockResponse).sendRedirect("/chat/test_conversation");
+  }
 }
