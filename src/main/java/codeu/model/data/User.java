@@ -34,7 +34,7 @@ public class User implements FeedEntry{
    * @param passwordHash the password hash of this User
    * @param creation the creation time of this User
    * @param bio the bio of this User
-   * @param unfollowing the entities unfollowed by this User
+   * @param unfollowing the entities unfollowed by this User, by default User follows everyone
    */
   public User(UUID id, String name, String passwordHash, Instant creation, String bio, String unfollowing) {
     this.id = id;
@@ -85,8 +85,12 @@ public class User implements FeedEntry{
   }
 
   /** Returns unfollowed entities of this User. */
-  public String getUnfollowing() { return unfollowing; }
+  public String getUnfollowing() {
+    return unfollowing;
+  }
 
   /** Sets new unfollowed string of entities for this User. */
-  public void setUnfollowing(String newUnfollowing) {unfollowing = newUnfollowing; }
+  public void setUnfollowing(String newUnfollowing) {
+    unfollowing = newUnfollowing;
+  }
 }
