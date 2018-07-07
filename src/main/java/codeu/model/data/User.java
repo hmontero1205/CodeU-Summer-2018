@@ -91,6 +91,6 @@ public class User implements FeedEntry{
 
   /** Sets new unfollowed string of entities for this User. */
   public void setUnfollowing(String newUnfollowing) {
-    unfollowing = newUnfollowing;
+    unfollowing = (newUnfollowing == null) ? "" : newUnfollowing;
   }
 }
