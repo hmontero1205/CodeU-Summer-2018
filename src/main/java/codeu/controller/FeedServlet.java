@@ -130,7 +130,7 @@ public class FeedServlet extends HttpServlet {
     this.messageStore = messageStore;
   }
 
-  public List<FeedEntry> getSortedEntries() {
+  List<FeedEntry> getSortedEntries() {
     List<Conversation> conversations = conversationStore.getAllConversations();
     List<User> users = userStore.getAllUsers();
     List<Message> messages = messageStore.getAllMessages();
@@ -146,7 +146,7 @@ public class FeedServlet extends HttpServlet {
     return entries;
   }
 
-  public void filterUnfollowedEntries(HttpServletRequest request, List<FeedEntry> entries) {
+  void filterUnfollowedEntries(HttpServletRequest request, List<FeedEntry> entries) {
     if(request.getSession().getAttribute("user") != null) {
       User currentUser = userStore.getUser((String) request.getSession().getAttribute("user"));
       if(currentUser != null) {
@@ -185,7 +185,7 @@ public class FeedServlet extends HttpServlet {
     }
   }
 
-  public void doPostFollow(HttpServletRequest request, HttpServletResponse response)
+  void doPostFollow(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
     User currentUser = userStore.getUser((String) request.getSession().getAttribute("user"));
     List<String> unfollowing = new ArrayList<>(Arrays.asList(currentUser.getUnfollowing().split("_")));
@@ -217,7 +217,7 @@ public class FeedServlet extends HttpServlet {
     request.getRequestDispatcher("/WEB-INF/view/feed.jsp").forward(request, response);
   }
 
-  public void doPostLoad(HttpServletRequest request, HttpServletResponse response)
+  void doPostLoad(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
     List<FeedEntry> entries = getSortedEntries();
     //Remove messages that the User has chosen to unfollow because of sender or conversation
