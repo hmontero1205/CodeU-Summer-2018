@@ -26,10 +26,7 @@ import codeu.model.store.basic.UserStore;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -76,7 +73,8 @@ public class FeedServletTest {
     feedServlet.setUserStore(mockUserStore);
 
     ArrayList<User> fakeUserList = new ArrayList<>();
-    fakeUserList.add(new User(UUID.randomUUID(), "fakenname", "fakepass", Instant.now()));
+    fakeUserList.add(new User(UUID.randomUUID(), "fakename", "fakepass", Instant.now()));
+    fakeUserList.add(new User(UUID.randomUUID(), "fakename2", "fakepass2", Instant.now()));
 
     ArrayList<Conversation> fakeConversationList = new ArrayList<>();
     fakeConversationList.add(
@@ -94,11 +92,17 @@ public class FeedServletTest {
 
     Collections.sort(fakeEntryList, new FeedServlet.FeedEntryComparator());
     Mockito.when(feedServlet.getSortedEntries()).thenReturn(fakeEntryList);
+    Mockito.when(mockRequest.getParameter("feedCount")).thenReturn("1");
+    Mockito.when(mockSession.getAttribute("user")).thenReturn("fakename");
+    Mockito.when(mockRequest.getParameter("entityUUID")).thenReturn(fakeUserList.get(1).getId().toString());
+    fakeUserList.get(0).setUnfollowing(fakeUserList.get(1).getId().toString());
+    Mockito.when(mockUserStore.getUser("fakename")).thenReturn(fakeUserList.get(1));
   }
 
   @Test
   public void testDoGet() throws IOException, ServletException {
     List<FeedEntry> fakeEntryList = feedServlet.getSortedEntries();
+    feedServlet.filterUnfollowedEntries(mockRequest, fakeEntryList);
     int feedCount = Math.min(DEFAULT_ENTRY_COUNT, fakeEntryList.size());
     int remaining = fakeEntryList.size() - feedCount;
     List<FeedEntry> fakeSublist = fakeEntryList.subList(fakeEntryList.size() - feedCount, fakeEntryList.size());
@@ -113,11 +117,10 @@ public class FeedServletTest {
   }
 
   @Test
-  public void testDoPost() throws IOException, ServletException {
-    Mockito.when(mockRequest.getParameter("feedCount")).thenReturn("1");
-    Mockito.when(mockSession.getAttribute("user")).thenReturn("test_username");
-
+  public void testDoPost_Load() throws IOException, ServletException {
+    Mockito.when(mockRequest.getParameter("follow")).thenReturn(null);
     List<FeedEntry> fakeEntryList = feedServlet.getSortedEntries();
+    feedServlet.filterUnfollowedEntries(mockRequest, fakeEntryList);
     int newFeedCount = Math.min(Integer.parseInt(mockRequest.getParameter("feedCount")) + 10, fakeEntryList.size());
     int remaining = fakeEntryList.size() - newFeedCount;
     List<FeedEntry> fakeSublist = fakeEntryList.subList(fakeEntryList.size() - newFeedCount, fakeEntryList.size());
@@ -128,6 +131,68 @@ public class FeedServletTest {
     Mockito.verify(mockRequest).setAttribute("remaining", remaining);
     Mockito.verify(mockRequest).setAttribute("feedCount", newFeedCount);
     Mockito.verify(mockRequest).setAttribute("scrollUp", true);
+    Mockito.verify(mockRequestDispatcher).forward(mockRequest, mockResponse);
+  }
+
+  @Test
+  public void testDoPost_Follow_False() throws IOException, ServletException {
+    Mockito.when(mockRequest.getParameter("follow")).thenReturn("false");
+    User currentUser = mockUserStore.getUser((String) mockRequest.getSession().getAttribute("user"));
+    List<String> unfollowing = new ArrayList<>(Arrays.asList(currentUser.getUnfollowing().split("_")));
+    if(Boolean.parseBoolean(mockRequest.getParameter("follow"))) {
+      unfollowing.remove(mockRequest.getParameter("entityUUID"));
+    } else {
+      unfollowing.add(mockRequest.getParameter("entityUUID"));
+    }
+
+    String updatedString = String.join("_", unfollowing);
+    currentUser.setUnfollowing(updatedString);
+    mockUserStore.updateUser(currentUser);
+
+    List<FeedEntry> fakeEntryList = feedServlet.getSortedEntries();
+    feedServlet.filterUnfollowedEntries(mockRequest, fakeEntryList);
+
+    int feedCount = Math.min(DEFAULT_ENTRY_COUNT, fakeEntryList.size());
+    int remaining = fakeEntryList.size() - feedCount;
+
+    feedServlet.doPost(mockRequest, mockResponse);
+
+    Mockito.verify(mockRequest).setAttribute("entries", fakeEntryList.subList(fakeEntryList.size() - feedCount,
+        fakeEntryList.size()));
+    Mockito.verify(mockRequest).setAttribute("feedCount", feedCount);
+    Mockito.verify(mockRequest).setAttribute("remaining", remaining);
+    Mockito.verify(mockRequest).setAttribute("scrollUp", false);
+    Mockito.verify(mockRequestDispatcher).forward(mockRequest, mockResponse);
+  }
+
+  @Test
+  public void testDoPost_Follow_True() throws IOException, ServletException {
+    Mockito.when(mockRequest.getParameter("follow")).thenReturn("true");
+    User currentUser = mockUserStore.getUser((String) mockRequest.getSession().getAttribute("user"));
+    List<String> unfollowing = new ArrayList<>(Arrays.asList(currentUser.getUnfollowing().split("_")));
+    if(Boolean.parseBoolean(mockRequest.getParameter("follow"))) {
+      unfollowing.remove(mockRequest.getParameter("entityUUID"));
+    } else {
+      unfollowing.add(mockRequest.getParameter("entityUUID"));
+    }
+
+    String updatedString = String.join("_", unfollowing);
+    currentUser.setUnfollowing(updatedString);
+    mockUserStore.updateUser(currentUser);
+
+    List<FeedEntry> fakeEntryList = feedServlet.getSortedEntries();
+    feedServlet.filterUnfollowedEntries(mockRequest, fakeEntryList);
+
+    int feedCount = Math.min(DEFAULT_ENTRY_COUNT, fakeEntryList.size());
+    int remaining = fakeEntryList.size() - feedCount;
+
+    feedServlet.doPost(mockRequest, mockResponse);
+
+    Mockito.verify(mockRequest).setAttribute("entries", fakeEntryList.subList(fakeEntryList.size() - feedCount,
+        fakeEntryList.size()));
+    Mockito.verify(mockRequest).setAttribute("feedCount", feedCount);
+    Mockito.verify(mockRequest).setAttribute("remaining", remaining);
+    Mockito.verify(mockRequest).setAttribute("scrollUp", false);
     Mockito.verify(mockRequestDispatcher).forward(mockRequest, mockResponse);
   }
 }
