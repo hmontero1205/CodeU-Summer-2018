@@ -58,12 +58,22 @@
 
     <h1>Conversations</h1>
 
+    <p>Search for a conversation by name or tag.</p>
+    <form action="/conversations" method="POST">
+        <div class="form-group">
+          <label class="form-control-label">Query:</label>
+        <input type="text" name="search">
+      </div>
+
+      <button type="submit">Search!</button>
+    </form>
+
     <%
     List<Conversation> conversations =
       (List<Conversation>) request.getAttribute("conversations");
     if(conversations == null || conversations.isEmpty()){
     %>
-      <p>Create a conversation to get started.</p>
+      <p> <% request.getAttribute("nomessage") %> </p>
     <%
     }
     else{

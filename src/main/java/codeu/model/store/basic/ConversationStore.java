@@ -116,7 +116,7 @@ public class ConversationStore {
     this.conversations = conversations;
   }
 
-  /**Updates the conversation. **/
+  /** Updates the conversation. **/
   public void updateConversation(Conversation conversation) {
     persistentStorageAgent.writeThrough(conversation);
   }

@@ -51,10 +51,7 @@ public class Conversation implements FeedEntry{
     this.owner = owner;
     this.creation = creation;
     this.title = title;
-    if(tags == null)
-      this.tags = new ArrayList<String>();
-    else
-      this.tags = tags;
+    this.tags = (tags == null) ? new ArrayList<String>(): tags;
   }
 
 
@@ -85,19 +82,23 @@ public class Conversation implements FeedEntry{
 
   /** Returns the tags of this conversation as a string separated by commas. */
   public String getStringTags() {
-    String stringtags = "";
-    if (tags.size() > 0)
-    {
-      stringtags = tags.get(0);
+    String stringTags = "";
+    if (tags.size() > 0) {
+      stringTags = tags.get(0);
       for(int i = 1; i< tags.size(); i++)
-        stringtags += ", " + tags.get(i);
+        stringTags += ", " + tags.get(i);
     }
-    return stringtags;
+    return stringTags;
   }
 
   /** Adds a string to the tags of this Conversation. */
   public void addTag(String tag) {
-    if(tags.indexOf(tag)!=0 && !(tag==null) && !(tag.trim().isEmpty()))
+    if (!(tag==null) && !(tag.trim().isEmpty()) && tags.indexOf(tag)!=0)
         tags.add(tag.toLowerCase());
+  }
+
+  /* Searches for a string in this conversation's tags. */
+  public boolean matchesNameOrTags(String search) {
+    return tags.contains(search) || title.equals(search);
   }
 }

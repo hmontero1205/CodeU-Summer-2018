@@ -28,8 +28,6 @@ public class ConversationTest {
     UUID owner = UUID.randomUUID();
     String title = "Test_Title";
     Instant creation = Instant.now();
-    ArrayList<String> tags = new ArrayList<String>();
-    tags.add("tag1");
 
     Conversation conversation = new Conversation(id, owner, title, creation);
 
@@ -37,6 +35,15 @@ public class ConversationTest {
     Assert.assertEquals(owner, conversation.getOwnerId());
     Assert.assertEquals(title, conversation.getTitle());
     Assert.assertEquals(creation, conversation.getCreationTime());
+  }
+
+public void testCreateTags() {
+    UUID id = UUID.randomUUID();
+    UUID owner = UUID.randomUUID();
+    String title = "Test_Title";
+    Instant creation = Instant.now();
+    ArrayList<String> tags = new ArrayList<String>();
+    tags.add("tag1");
 
     Conversation conversation2 = new Conversation(id, owner, title, creation, tags);
 

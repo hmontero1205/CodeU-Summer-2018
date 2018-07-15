@@ -138,7 +138,7 @@ public class ChatServlet extends HttpServlet {
       return;
     }
 
-    if(request.getParameter("message") != null) {
+    if (request.getParameter("message") != null) {
 
       String messageContent = request.getParameter("message");
 
