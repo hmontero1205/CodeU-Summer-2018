@@ -26,8 +26,6 @@
      <% } %>
    </nav>
 
- 
- 
    <div id="container">
      <%-- If there are errors, tell Admin --%>
     <% if (request.getAttribute("error") != null) { %>
@@ -41,12 +39,12 @@
      <%
      List<Conversation> conversations = (List<Conversation>) request.getAttribute("conversations");
      List<Message> messages = (List<Message>) request.getAttribute("messages");
-     List<User> users = (List<User>) request.getAttribute("users");
+     Object numOfUsers = request.getAttribute("users");
      %>
      <ul>
  
-    <% if (users != null) { %>
-         <li><strong>Users:</strong> <%= users.size() %> </li>
+    <% if (numOfUsers != null) { %>
+         <li><strong>Users:</strong> <%= numOfUsers %> </li>
      <% } %>
     <% if (conversations != null) { %>
          <li><strong>Conversations:</strong> <%= conversations.size() %> </li>
