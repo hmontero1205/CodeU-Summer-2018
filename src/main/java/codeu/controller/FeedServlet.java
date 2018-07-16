@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Servlet class responsible for the conversations page.
+ * Servlet class responsible for the activity feed page.
  */
 public class FeedServlet extends HttpServlet {
 
@@ -49,6 +49,11 @@ public class FeedServlet extends HttpServlet {
    * Store class that gives access to Messages.
    */
   private MessageStore messageStore;
+
+  /**
+   * Default number of entries on the feed page
+   */
+  public static final int DEFAULT_ENTRY_COUNT = 20;
 
   /**
    * Set up state for handling conversation-related requests. This method is only called when
@@ -86,6 +91,46 @@ public class FeedServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
+
+    List<FeedEntry> entries = getSortedEntries();
+    //Remove messages that the User has chosen to unfollow because of sender or conversation
+    filterUnfollowedEntries(request, entries);
+    //Either display default number of entries or the size of list entries, whichever is smaller
+    int feedCount = Math.min(DEFAULT_ENTRY_COUNT, entries.size());
+    int remaining = entries.size() - feedCount;
+
+    //Truncate entries to the last newFeedCount amount of entries
+    request.setAttribute("entries", entries.subList(entries.size() - feedCount, entries.size()));
+    request.setAttribute("feedCount", feedCount);
+    request.setAttribute("remaining", remaining);
+    request.setAttribute("scrollUp", false);
+    request.getRequestDispatcher("/WEB-INF/view/feed.jsp").forward(request, response);
+  }
+
+  /**
+   * This function fires when a user submits the form on the activity feed page.
+   * TODO Implement threshold for fetching entries.
+   */
+  @Override
+  public void doPost(HttpServletRequest request, HttpServletResponse response)
+      throws IOException, ServletException {
+
+    if(request.getParameter("follow") != null) {
+      doPostFollow(request, response);
+    } else {
+      doPostLoad(request, response);
+    }
+  }
+
+  /**
+   * Sets the UserStore used by this servlet. This function provides a common setup method for use
+   * by the test framework or the servlet's init() function.
+   */
+  void setMessageStore(MessageStore messageStore) {
+    this.messageStore = messageStore;
+  }
+
+  public List<FeedEntry> getSortedEntries() {
     List<Conversation> conversations = conversationStore.getAllConversations();
     List<User> users = userStore.getAllUsers();
     List<Message> messages = messageStore.getAllMessages();
@@ -98,26 +143,20 @@ public class FeedServlet extends HttpServlet {
 
     Collections.sort(entries, new FeedEntryComparator());
 
-    request.setAttribute("entries", entries);
-    request.getRequestDispatcher("/WEB-INF/view/feed.jsp").forward(request, response);
+    return entries;
   }
 
-  /**
-   * This function fires when a user submits the form on the activity feed page.
-   * TODO Implement user-defined threshold
-   */
-  @Override
-  public void doPost(HttpServletRequest request, HttpServletResponse response)
-      throws IOException, ServletException, UnsupportedOperationException {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Sets the UserStore used by this servlet. This function provides a common setup method for use
-   * by the test framework or the servlet's init() function.
-   */
-  void setMessageStore(MessageStore messageStore) {
-    this.messageStore = messageStore;
+  public void filterUnfollowedEntries(HttpServletRequest request, List<FeedEntry> entries) {
+    if(request.getSession().getAttribute("user") != null) {
+      User currentUser = userStore.getUser((String) request.getSession().getAttribute("user"));
+      if(currentUser != null) {
+        List<String> unfollowing = new ArrayList<>(Arrays.asList(currentUser.getUnfollowing().split("_")));
+        entries.removeIf((FeedEntry e) -> {
+          return e instanceof Message && ((unfollowing.contains(((Message) e).getConversationId().toString())) ||
+              (unfollowing.contains(((Message) e).getAuthorId().toString())));
+        });
+      }
+    }
   }
 
   /**
@@ -130,5 +169,69 @@ public class FeedServlet extends HttpServlet {
     public int compare(FeedEntry e1, FeedEntry e2) {
       return e1.getCreationTime().compareTo(e2.getCreationTime());
     }
+  }
+
+  public static class UserComparator implements Comparator<User> {
+    @Override
+    public int compare(User u1, User u2) {
+      return u1.getName().toLowerCase().compareTo(u2.getName().toLowerCase());
+    }
+  }
+
+  public static class ConversationComparator implements Comparator<Conversation> {
+    @Override
+    public int compare(Conversation c1, Conversation c2) {
+      return c1.getTitle().toLowerCase().compareTo(c2.getTitle().toLowerCase());
+    }
+  }
+
+  public void doPostFollow(HttpServletRequest request, HttpServletResponse response)
+      throws IOException, ServletException {
+    User currentUser = userStore.getUser((String) request.getSession().getAttribute("user"));
+    List<String> unfollowing = new ArrayList<>(Arrays.asList(currentUser.getUnfollowing().split("_")));
+    if(Boolean.parseBoolean(request.getParameter("follow"))) {
+      unfollowing.remove(request.getParameter("entityUUID"));
+    } else {
+      unfollowing.add(request.getParameter("entityUUID"));
+    }
+
+    //Update User preference in DataStore
+    String updatedString = String.join("_", unfollowing);
+    currentUser.setUnfollowing(updatedString);
+    userStore.updateUser(currentUser);
+
+    //Reset Page
+    List<FeedEntry> entries = getSortedEntries();
+    //Remove messages that the User has chosen to unfollow because of sender or conversation
+    filterUnfollowedEntries(request, entries);
+
+    //Either display default number of entries or the size of list entries, whichever is smaller
+    int feedCount = Math.min(DEFAULT_ENTRY_COUNT, entries.size());
+    int remaining = entries.size() - feedCount;
+
+    //Truncate entries to the last newFeedCount amount of entries
+    request.setAttribute("entries", entries.subList(entries.size() - feedCount, entries.size()));
+    request.setAttribute("feedCount", feedCount);
+    request.setAttribute("remaining", remaining);
+    request.setAttribute("scrollUp", false);
+    request.getRequestDispatcher("/WEB-INF/view/feed.jsp").forward(request, response);
+  }
+
+  public void doPostLoad(HttpServletRequest request, HttpServletResponse response)
+      throws IOException, ServletException {
+    List<FeedEntry> entries = getSortedEntries();
+    //Remove messages that the User has chosen to unfollow because of sender or conversation
+    filterUnfollowedEntries(request, entries);
+
+    //Either display current feed count + 10 or the size of list entries, whichever is smaller
+    int newFeedCount = Math.min(Integer.parseInt(request.getParameter("feedCount")) + 10, entries.size());
+    int remaining = entries.size() - newFeedCount;
+
+    //Truncate entries to the last newFeedCount amount of entries
+    request.setAttribute("entries", entries.subList(entries.size() - newFeedCount, entries.size()));
+    request.setAttribute("feedCount", newFeedCount);
+    request.setAttribute("remaining", remaining);
+    request.setAttribute("scrollUp", true);
+    request.getRequestDispatcher("/WEB-INF/view/feed.jsp").forward(request, response);
   }
 }

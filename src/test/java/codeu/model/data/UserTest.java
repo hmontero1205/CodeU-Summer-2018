@@ -28,6 +28,7 @@ public class UserTest {
     String passwordHash = "$2a$10$bBiLUAVmUFK6Iwg5rmpBUOIBW6rIMhU1eKfi3KR60V9UXaYTwPfHy";
     Instant creation = Instant.now();
     String bio = "bleh";
+    String unfollowing = "nobody";
 
     User user = new User(id, name, passwordHash, creation);
 
@@ -36,12 +37,13 @@ public class UserTest {
     Assert.assertEquals(passwordHash, user.getPasswordHash());
     Assert.assertEquals(creation, user.getCreationTime());
 
-    User user2 = new User(id, name, passwordHash, creation, bio);
+    User user2 = new User(id, name, passwordHash, creation, bio, unfollowing);
 
     Assert.assertEquals(id, user2.getId());
     Assert.assertEquals(name, user2.getName());
     Assert.assertEquals(passwordHash, user2.getPasswordHash());
     Assert.assertEquals(creation, user2.getCreationTime());
     Assert.assertEquals(bio, user2.getBio());
+    Assert.assertEquals(unfollowing, user2.getUnfollowing());
   }
 }
