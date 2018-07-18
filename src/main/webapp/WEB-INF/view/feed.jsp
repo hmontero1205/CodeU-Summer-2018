@@ -383,7 +383,7 @@
         %>
 
         <li class="entry">
-          <a href=<%= "/conversation/" + title %>><%= title %></a>
+          <a href=<%= "/chat/" + title %>><%= title %></a>
           <%
             if(unfollowing.contains(c.getId().toString())) {
           %>
