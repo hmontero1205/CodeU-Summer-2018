@@ -47,7 +47,7 @@ public class User implements FeedEntry{
     this.name = name;
     this.passwordHash = passwordHash;
     this.creation = creation;
-    this.bio = name + "has not updated their bio.";
+    this.bio = name + " has not updated their bio.";
   }
 
   /** Returns the ID of this User. */
