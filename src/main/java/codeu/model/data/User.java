@@ -23,7 +23,8 @@ public class User implements FeedEntry{
   private final String name;
   private final String passwordHash;
   private final Instant creation;
-  private String bio;;
+  private String bio;
+  private String unfollowing;
 
   /**
    * Constructs a new User.
@@ -33,13 +34,15 @@ public class User implements FeedEntry{
    * @param passwordHash the password hash of this User
    * @param creation the creation time of this User
    * @param bio the bio of this User
+   * @param unfollowing the entities unfollowed by this User, by default User follows everyone
    */
-  public User(UUID id, String name, String passwordHash, Instant creation, String bio) {
+  public User(UUID id, String name, String passwordHash, Instant creation, String bio, String unfollowing) {
     this.id = id;
     this.name = name;
     this.passwordHash = passwordHash;
     this.creation = creation;
     this.bio = bio;
+    this.unfollowing = (unfollowing == null) ? "" : unfollowing;
   }
 
   public User(UUID id, String name, String passwordHash, Instant creation) {
@@ -48,6 +51,7 @@ public class User implements FeedEntry{
     this.passwordHash = passwordHash;
     this.creation = creation;
     this.bio = name + " has not updated their bio.";
+    this.unfollowing = "";
   }
 
   /** Returns the ID of this User. */
@@ -78,5 +82,15 @@ public class User implements FeedEntry{
   /** Returns the bio of this User. */
   public String getBio() {
     return bio;
+  }
+
+  /** Returns unfollowed entities of this User. */
+  public String getUnfollowing() {
+    return unfollowing;
+  }
+
+  /** Sets new unfollowed string of entities for this User. */
+  public void setUnfollowing(String newUnfollowing) {
+    unfollowing = (newUnfollowing == null) ? "" : newUnfollowing;
   }
 }
