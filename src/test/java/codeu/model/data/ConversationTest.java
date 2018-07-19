@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Test;
+import java.util.ArrayList;
 
 public class ConversationTest {
 
@@ -34,5 +35,25 @@ public class ConversationTest {
     Assert.assertEquals(owner, conversation.getOwnerId());
     Assert.assertEquals(title, conversation.getTitle());
     Assert.assertEquals(creation, conversation.getCreationTime());
+  }
+
+public void testCreateTags() {
+    UUID id = UUID.randomUUID();
+    UUID owner = UUID.randomUUID();
+    String title = "Test_Title";
+    Instant creation = Instant.now();
+    ArrayList<String> tags = new ArrayList<String>();
+    tags.add("tag1");
+
+    Conversation conversation2 = new Conversation(id, owner, title, creation, tags);
+
+    Assert.assertEquals(id, conversation2.getId());
+    Assert.assertEquals(owner, conversation2.getOwnerId());
+    Assert.assertEquals(title, conversation2.getTitle());
+    Assert.assertEquals(creation, conversation2.getCreationTime());
+    Assert.assertEquals(tags, conversation2.getTags());
+
+    conversation2.addTag("tag2");
+    Assert.assertEquals(conversation2.getStringTags(), "tag1, tag2");
   }
 }
