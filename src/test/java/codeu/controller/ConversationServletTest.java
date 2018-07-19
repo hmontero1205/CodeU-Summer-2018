@@ -65,11 +65,12 @@ public class ConversationServletTest {
   }
 
   @Test
-  public void testDoGet() throws IOException, ServletException {
+  public void testDoGet_NoSearch() throws IOException, ServletException {
     List<Conversation> fakeConversationList = new ArrayList<>();
     fakeConversationList.add(
         new Conversation(UUID.randomUUID(), UUID.randomUUID(), "test_conversation", Instant.now()));
     Mockito.when(mockConversationStore.getAllConversations()).thenReturn(fakeConversationList);
+    Mockito.when(mockRequest.getRequestURI()).thenReturn("/conversations");
 
     conversationServlet.doGet(mockRequest, mockResponse);
 
@@ -78,9 +79,35 @@ public class ConversationServletTest {
   }
 
   @Test
+  public void testDoGet_Search() throws IOException, ServletException {
+    List<Conversation> fakeConversationList = new ArrayList<>();
+    ArrayList<String> fakeTags = new ArrayList<>();
+    fakeTags.add("test");
+    fakeConversationList.add(
+        new Conversation(UUID.randomUUID(), UUID.randomUUID(), "test_conversation", Instant.now(), fakeTags));
+    Mockito.when(mockConversationStore.getAllConversations()).thenReturn(fakeConversationList);
+    Mockito.when(mockRequest.getRequestURI()).thenReturn("/conversations/search=test");
+
+    conversationServlet.doGet(mockRequest, mockResponse);
+
+    Mockito.verify(mockRequest).setAttribute("conversations", fakeConversationList);
+    Mockito.verify(mockRequestDispatcher).forward(mockRequest, mockResponse);
+  }
+
+  @Test
+  public void testDoPost_Search() throws IOException, ServletException {
+    Mockito.when(mockSession.getAttribute("user")).thenReturn(null);
+    Mockito.when(mockRequest.getParameter("conversationTitle")).thenReturn(null);
+    Mockito.when(mockRequest.getParameter("search")).thenReturn("tag");
+    conversationServlet.doPost(mockRequest, mockResponse);
+    
+    Mockito.verify(mockResponse).sendRedirect("/conversations/search=tag");
+  }
+
+  @Test
   public void testDoPost_UserNotLoggedIn() throws IOException, ServletException {
     Mockito.when(mockSession.getAttribute("user")).thenReturn(null);
-
+    Mockito.when(mockRequest.getParameter("conversationTitle")).thenReturn("title");
     conversationServlet.doPost(mockRequest, mockResponse);
 
     Mockito.verify(mockConversationStore, Mockito.never())
@@ -92,6 +119,7 @@ public class ConversationServletTest {
   public void testDoPost_InvalidUser() throws IOException, ServletException {
     Mockito.when(mockSession.getAttribute("user")).thenReturn("test_username");
     Mockito.when(mockUserStore.getUser("test_username")).thenReturn(null);
+    Mockito.when(mockRequest.getParameter("conversationTitle")).thenReturn("title");
 
     conversationServlet.doPost(mockRequest, mockResponse);
 

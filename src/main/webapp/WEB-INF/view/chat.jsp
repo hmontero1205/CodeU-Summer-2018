@@ -27,7 +27,6 @@ List<Message> messages = (List<Message>) request.getAttribute("messages");
 <head>
   <title><%= conversation.getTitle() %></title>
   <link rel="stylesheet" href="/css/main.css" type="text/css">
-
   <style>
     #chat {
       background-color: white;
@@ -50,7 +49,7 @@ List<Message> messages = (List<Message>) request.getAttribute("messages");
     <a id="navTitle" href="/">CodeU Chat App</a>
     <a href="/conversations">Conversations</a>
       <% if (request.getSession().getAttribute("user") != null) { %>
-    <a>Hello <%= request.getSession().getAttribute("user") %>!</a>
+    <a href = "/profile"> Hello <%= request.getSession().getAttribute("user") %>!</a>
     <% } else { %>
       <a href="/login">Login</a>
     <% } %>
@@ -63,7 +62,17 @@ List<Message> messages = (List<Message>) request.getAttribute("messages");
     <h1><%= conversation.getTitle() %>
       <a href="" style="float: right">&#8635;</a></h1>
 
+    <strong><%= conversation.getStringTags() %></strong>
+
     <hr/>
+
+    <% if (request.getSession().getAttribute("user") != null) { %>
+    <form action="/chat/<%= conversation.getTitle() %>" method="POST">
+        <input  type="text" name="tag">
+        <br/>
+        <button type="submit">Add Tag</button>
+    </form>
+    <% } %>
 
     <div id="chat">
       <ul>

@@ -36,12 +36,16 @@ public class ProfileServlet extends HttpServlet {
   void setUserStore(UserStore userStore) {
     this.userStore = userStore;
   }
-  
+
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
     String requestUrl = request.getRequestURI();
-    String requestUserName = requestUrl.substring("/user/".length());
+    String requestUserName = "";
+    if(requestUrl.equals("/profile"))
+      requestUserName += request.getSession().getAttribute("user");
+    else
+      requestUserName += requestUrl.substring("/user/".length());
     User requestUser = userStore.getUser(requestUserName);
     if (requestUser == null) {
       // couldn't find user, redirect to conversation list
@@ -50,6 +54,7 @@ public class ProfileServlet extends HttpServlet {
       return;
     }
 
+    request.setAttribute("userlink", requestUrl);
     request.setAttribute("requestUser", requestUser);
     request.getRequestDispatcher("/WEB-INF/view/profile.jsp").forward(request, response);
   }

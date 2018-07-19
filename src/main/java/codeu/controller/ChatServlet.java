@@ -139,23 +139,30 @@ public class ChatServlet extends HttpServlet {
       response.sendRedirect("/conversations");
       return;
     }
-    
-    Document.OutputSettings outputSettings = new Document.OutputSettings();
-    outputSettings.prettyPrint(false);
-    String messageContent = request.getParameter("message");
 
-    // this line Whitelists the script tag, which improves security.
-    String cleanedMessageContent = Jsoup.clean(messageContent, "", Whitelist.simpleText(), outputSettings);
+    if (request.getParameter("message") != null) {
+      Document.OutputSettings outputSettings = new Document.OutputSettings();
+      outputSettings.prettyPrint(false);
+      String messageContent = request.getParameter("message");
 
-    Message message =
-        new Message(
-            UUID.randomUUID(),
-            conversation.getId(),
-            user.getId(),
-            cleanedMessageContent,
-            Instant.now());
+      // this line Whitelists the script tag, which improves security.
+      String cleanedMessageContent = Jsoup.clean(messageContent, "", Whitelist.simpleText(), outputSettings);
 
-    messageStore.addMessage(message);
+      Message message =
+          new Message(
+              UUID.randomUUID(),
+              conversation.getId(),
+              user.getId(),
+              cleanedMessageContent,
+              Instant.now());
+
+      messageStore.addMessage(message);
+  }
+  else if(request.getParameter("tag") != null) {
+    String tag = request.getParameter("tag");
+    conversation.addTag(tag);
+    conversationStore.updateConversation(conversation);
+  }
 
     // redirect to a GET request
     response.sendRedirect("/chat/" + conversationTitle);

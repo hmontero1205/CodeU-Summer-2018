@@ -21,6 +21,7 @@ import codeu.model.store.basic.UserStore;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.UUID;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -71,7 +72,29 @@ public class ConversationServlet extends HttpServlet {
   public void doGet(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
     List<Conversation> conversations = conversationStore.getAllConversations();
-    request.setAttribute("conversations", conversations);
+
+    /*Checking if there is a search term and applying it if so */
+    String requestUrl = request.getRequestURI();
+    String requestSearch = requestUrl.substring("/conversation".length());
+    request.setAttribute("nomessage","Create a conversation to get started.");
+    if(requestSearch.length()>1)
+    {
+      List<Conversation> searched = new ArrayList<Conversation>();
+      String editedQuery = requestSearch.substring("s/search=".length());
+      String query = editedQuery.replace("%20", " ");
+      for(Conversation conversation : conversations)
+        {
+          if(conversation.matchesNameOrTags(query))
+            searched.add(conversation);
+        }
+      if(searched.size() == 0)
+        request.setAttribute("nomessage","Nothing matched your search term.");
+      request.setAttribute("conversations", searched);
+    }
+    else
+    {
+      request.setAttribute("conversations", conversations);
+    }
     request.getRequestDispatcher("/WEB-INF/view/conversations.jsp").forward(request, response);
   }
 
@@ -79,44 +102,54 @@ public class ConversationServlet extends HttpServlet {
    * This function fires when a user submits the form on the conversations page. It gets the
    * logged-in username from the session and the new conversation title from the submitted form
    * data. It uses this to create a new Conversation object that it adds to the model.
+   * It also fires when searching for conversations.
    */
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
 
-    String username = (String) request.getSession().getAttribute("user");
-    if (username == null) {
-      // user is not logged in, don't let them create a conversation
-      response.sendRedirect("/conversations");
-      return;
-    }
+    if(request.getParameter("conversationTitle") != null) {
+      String username = (String) request.getSession().getAttribute("user");
+      if (username == null) {
+        // user is not logged in, don't let them create a conversation
+        response.sendRedirect("/conversations");
+        return;
+      }
 
-    User user = userStore.getUser(username);
-    if (user == null) {
-      // user was not found, don't let them create a conversation
-      System.out.println("User not found: " + username);
-      response.sendRedirect("/conversations");
-      return;
-    }
+      User user = userStore.getUser(username);
+      if (user == null) {
+        // user was not found, don't let them create a conversation
+        System.out.println("User not found: " + username);
+        response.sendRedirect("/conversations");
+        return;
+      }
 
-    String conversationTitle = request.getParameter("conversationTitle");
-    if (!conversationTitle.matches("[\\w*]*")) {
-      request.setAttribute("error", "Please enter only letters and numbers.");
-      request.getRequestDispatcher("/WEB-INF/view/conversations.jsp").forward(request, response);
-      return;
-    }
+      String conversationTitle = request.getParameter("conversationTitle");
+      if (!conversationTitle.matches("[\\w*]*")) {
+        request.setAttribute("error", "Please enter only letters and numbers.");
+        request.getRequestDispatcher("/WEB-INF/view/conversations.jsp").forward(request, response);
+        return;
+      }
 
-    if (conversationStore.isTitleTaken(conversationTitle)) {
-      // conversation title is already taken, just go into that conversation instead of creating a
-      // new one
+      if (conversationStore.isTitleTaken(conversationTitle)) {
+        // conversation title is already taken, just go into that conversation instead of creating a
+        // new one
+        response.sendRedirect("/chat/" + conversationTitle);
+        return;
+      }
+
+      Conversation conversation =
+          new Conversation(UUID.randomUUID(), user.getId(), conversationTitle, Instant.now());
+
+      conversationStore.addConversation(conversation);
       response.sendRedirect("/chat/" + conversationTitle);
-      return;
     }
 
-    Conversation conversation =
-        new Conversation(UUID.randomUUID(), user.getId(), conversationTitle, Instant.now());
-
-    conversationStore.addConversation(conversation);
-    response.sendRedirect("/chat/" + conversationTitle);
+    if(request.getParameter("search") != null)
+    {
+      String query = request.getParameter("search");
+      String editedQuery = query.replace(" ", "%20");
+      response.sendRedirect("/conversations/search=" + editedQuery);
+    }
   }
 }
