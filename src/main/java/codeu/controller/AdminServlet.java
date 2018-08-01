@@ -72,7 +72,7 @@ import javax.servlet.http.HttpServletResponse;
 	    this.userStore = userStore;
 	  }
 
-	  private List<Message> getAllMessages(List<Conversation> allConversations) {
+	  public List<Message> getAllMessages(List<Conversation> allConversations) {
 		  List<Message> messages = new ArrayList<>();
 		  for (Conversation c : allConversations) {
 			  messages.addAll(messageStore.getMessagesInConversation(c.getId()));
