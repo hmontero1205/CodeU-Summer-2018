@@ -76,14 +76,11 @@ public class AdminServletTest {
 	    Mockito.when(mockUserStore.getAllUsers()).thenReturn(fakeUserList);
 	    
 	    List<Conversation> fakeConversationList = new ArrayList<>();
-	    fakeConversationList.add(
-	        new Conversation(UUID.randomUUID(), fakeUserList.get(0).getId(),"test_conversation", Instant.now()));
+	    fakeConversationList.add(new Conversation(UUID.randomUUID(), fakeUserList.get(0).getId(),"test_conversation", Instant.now()));
 	    Mockito.when(mockConversationStore.getAllConversations()).thenReturn(fakeConversationList);
 
 	    List<Message> fakeMessageList = new ArrayList<>();
-	    fakeMessageList.add(
-	      new Message(UUID.randomUUID(), fakeConversationList.get(0).getId(), fakeUserList.get(0).getId(),
-	            "fakeMessage", Instant.now()));
+	    fakeMessageList.add(new Message(UUID.randomUUID(), fakeConversationList.get(0).getId(), fakeUserList.get(0).getId(), "fakeMessage", Instant.now()));
 	    Mockito.when(mockMessageStore.getMessagesInConversation(fakeConversationList.get(0).getId())).thenReturn(fakeMessageList);
 	  
     adminServlet.doGet(mockRequest, mockResponse);
